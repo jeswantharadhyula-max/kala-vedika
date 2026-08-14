@@ -40,12 +40,14 @@
 
 /* === RESET === */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; font-size: 16px; }
+html { scroll-behavior: smooth; font-size: 16px; overflow-x: hidden; width: 100%; }
 body {
   font-family: 'Inter', sans-serif;
   background: var(--bg);
   color: var(--text);
   overflow-x: hidden;
+  width: 100%;
+  position: relative;
   line-height: 1.6;
 }
 img { max-width: 100%; display: block; }
@@ -265,7 +267,7 @@ ul { list-style: none; }
   display: block;
   font-family: 'Cinzel', serif;
   font-weight: 900;
-  font-size: clamp(3rem, 8vw, 6rem);
+  font-size: clamp(2rem, 8vw, 6rem);
   line-height: 1;
   background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 40%, var(--crimson-light) 100%);
   -webkit-background-clip: text;
@@ -1244,6 +1246,9 @@ ul { list-style: none; }
 }
 
 @media (max-width: 768px) {
+  .hero-video, .achievements-section video {
+    object-fit: contain !important;
+  }
   .navbar { padding: 0.85rem 1.25rem; }
   .nav-links {
     display: none;
