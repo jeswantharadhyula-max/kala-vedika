@@ -1,6 +1,4 @@
 node_modules/
 data/
 .env
-*.mp3
-*.mp4
 public/uploads/
