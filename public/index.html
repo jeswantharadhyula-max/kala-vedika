@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kala Vedika – Cultural Organization | KITS</title>
+  <meta name="description" content="Kala Vedika is the premier cultural organization at KITS, nurturing classical arts, dance, music, and drama since 2010." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <audio id="bgMusic" loop>
+    <source src="bgm.mp3" type="audio/mpeg">
+  </audio>
+  <!-- NAV -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-logo">
+      <img src="logo_final.jpg" alt="KV Logo" style="height: 50px; border-radius: 50%; object-fit: cover; aspect-ratio: 1/1;">
+      <div class="logo-text">
+        <span class="logo-main">KALA VEDIKA</span>
+        <span class="logo-sub">Cultural Organization</span>
+      </div>
+    </div>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#home" class="nav-link active" data-section="home">Home</a></li>
+      <li><a href="#about" class="nav-link" data-section="about">About</a></li>
+      <li><a href="#founders" class="nav-link" data-section="founders">Founders</a></li>
+      <li><a href="#members" class="nav-link" data-section="members">Members</a></li>
+      <li><a href="#achievements" class="nav-link" data-section="achievements">Achievements</a></li>
+      <li><a href="#events" class="nav-link" data-section="events">Calendar</a></li>
+      <li><a href="#contact" class="nav-link" data-section="contact">Feedback</a></li>
+    </ul>
+    <div class="nav-actions">
+      <button class="btn-icon" id="musicBtn" onclick="toggleMusic()" style="font-size: 1.5rem; color: var(--gold); border: none; background: transparent;" aria-label="Toggle Music">🎵</button>
+      <button class="btn-admin" id="adminBtn" onclick="openAdminModal()">Admin</button>
+      <button class="hamburger" id="hamburger" onclick="toggleMenu()">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero" id="home">
+    <div class="hero-bg">
+      <video autoplay muted loop playsinline class="hero-video">
+        <source src="hero_bg.mp4" type="video/mp4">
+      </video>
+      <div class="hero-orb orb1"></div>
+      <div class="hero-orb orb2"></div>
+      <div class="hero-orb orb3"></div>
+      <div class="hero-pattern"></div>
+    </div>
+    <div class="hero-content">
+      <div class="hero-badge">✦ Est. 2025 ✦</div>
+      <h1 class="hero-title">
+        <span class="hero-title-line1">KALA VEDIKA</span>
+        <span class="hero-title-line2">Where Art Meets Soul</span>
+      </h1>
+      <p class="hero-desc">The cultural heartbeat of KITS — nurturing classical arts, dance, music, drama, and literature for over a decade.</p>
+      <div class="hero-btns">
+        <button class="btn-primary" onclick="scrollTo('#achievements')">Achievements</button>
+        <button class="btn-primary" onclick="scrollTo('#events')">Events Calendar</button>
+        <button class="btn-outline" onclick="scrollTo('#about')">Discover More</button>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><span class="stat-num" id="statMembers">0</span><span class="stat-label">Members</span></div>
+        <div class="stat-divider"></div>
+        <div class="stat"><span class="stat-num">16+</span><span class="stat-label">Years</span></div>
+        <div class="stat-divider"></div>
+        <div class="stat"><span class="stat-num" id="statAchievements">0</span><span class="stat-label">Awards</span></div>
+        <div class="stat-divider"></div>
+        <div class="stat"><span class="stat-num" id="statEvents">0</span><span class="stat-label">Events</span></div>
+      </div>
+    </div>
+    <div class="hero-scroll-hint">
+      <span>Scroll to explore</span>
+      <div class="scroll-arrow"></div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="section about-section" id="about">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-badge">Our Story</div>
+        <h2 class="section-title">About Kala Vedika</h2>
+        <p class="section-subtitle">A sanctuary for classical arts and cultural expression</p>
+      </div>
+      <div class="about-grid">
+        <div class="about-text">
+          <p class="about-lead">Founded in 2010, Kala Vedika has been the premier cultural organization at KITS, dedicated to preserving and promoting the rich heritage of classical Indian arts.</p>
+          <p>We believe that art is not just performance — it is a language that transcends boundaries, connects generations, and speaks to the soul. Our organization provides a platform for students to discover their artistic talents and present them to the world.</p>
+          <div class="about-pillars">
+            <div class="pillar">
+              <div class="pillar-icon">💃</div>
+              <div>
+                <h4>Classical Dance</h4>
+                <p>Bharatanatyam, Kuchipudi & Folk</p>
+              </div>
+            </div>
+            <div class="pillar">
+              <div class="pillar-icon">🎵</div>
+              <div>
+                <h4>Music</h4>
+                <p>Carnatic, Hindustani & Instrumental</p>
+              </div>
+            </div>
+            <div class="pillar">
+              <div class="pillar-icon">🎭</div>
+              <div>
+                <h4>Drama & Literature</h4>
+                <p>Theatre, Poetry & Storytelling</p>
+              </div>
+            </div>
+            <div class="pillar">
+              <div class="pillar-icon">🎨</div>
+              <div>
+                <h4>Visual Arts</h4>
+                <p>Traditional Painting & Crafts</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="about-visual">
+          <div class="about-card-stack">
+            <div class="about-card card-back"></div>
+            <div class="about-card card-mid"></div>
+            <div class="about-card card-front">
+              <div class="about-card-content">
+                <div class="mandala">🪷</div>
+                <h3>कला वेदिका</h3>
+                <p>Art • Culture • Heritage</p>
+                <div class="card-divider"></div>
+                <p class="card-quote">"Nurturing the classical arts of tomorrow's generation"</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOUNDERS -->
+  <section class="section founders-section" id="founders">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-badge">Visionaries</div>
+        <h2 class="section-title">Our Founders</h2>
+        <p class="section-subtitle">The pillars who built Kala Vedika from the ground up</p>
+      </div>
+      <div class="founders-grid" id="foundersGrid">
+        <div class="loading-state">
+          <div class="loader"></div>
+          <p>Loading founders...</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MEMBERS -->
+  <section class="section members-section" id="members">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-badge">Our Team</div>
+        <h2 class="section-title">Members</h2>
+        <p class="section-subtitle">The talented souls who keep Kala Vedika alive</p>
+      </div>
+      <div class="members-filter" id="membersFilter">
+        <button class="filter-btn active" onclick="filterMembers('all')">All</button>
+        <button class="filter-btn" onclick="filterMembers('Secretary')">Secretary</button>
+        <button class="filter-btn" onclick="filterMembers('Cultural Head')">Cultural Head</button>
+        <button class="filter-btn" onclick="filterMembers('Event Coordinator')">Coordinators</button>
+        <button class="filter-btn" onclick="filterMembers('Member')">Members</button>
+      </div>
+      <div class="members-grid" id="membersGrid">
+        <div class="loading-state">
+          <div class="loader"></div>
+          <p>Loading members...</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ACHIEVEMENTS -->
+  <section class="section achievements-section" id="achievements" style="position: relative; overflow: hidden;">
+    <video autoplay muted loop playsinline style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; opacity: 0.25;">
+      <source src="achievement.mp4" type="video/mp4">
+    </video>
+    <div class="container" style="position: relative; z-index: 1;">
+      <div class="section-header">
+        <div class="section-badge">Glory</div>
+        <h2 class="section-title">Achievements</h2>
+        <p class="section-subtitle">Milestones that define our legacy</p>
+      </div>
+
+      <div class="achievements-filter">
+        <button class="filter-btn active" onclick="filterAchievements('all')">All</button>
+        <button class="filter-btn" onclick="filterAchievements('Dance')">Dance</button>
+        <button class="filter-btn" onclick="filterAchievements('Music')">Music</button>
+        <button class="filter-btn" onclick="filterAchievements('Drama')">Drama</button>
+        <button class="filter-btn" onclick="filterAchievements('Award')">Awards</button>
+      </div>
+      <div class="achievements-grid" id="achievementsGrid">
+        <div class="loading-state">
+          <div class="loader"></div>
+          <p>Loading achievements...</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EVENTS -->
+  <section class="section events-section" id="events">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-badge">Calendar</div>
+        <h2 class="section-title">Events</h2>
+        <p class="section-subtitle">Experience the vibrance of Kala Vedika</p>
+      </div>
+      <div class="live-clock-wrapper" style="text-align: center; margin-bottom: 2rem;">
+        <h3 id="liveClock" style="color: var(--gold); font-family: 'Cinzel', serif; font-size: 1.5rem; letter-spacing: 1px;">Loading Time...</h3>
+        <p id="liveDate" style="color: var(--text-light);"></p>
+      </div>
+      
+      <div class="calendar-container" id="calendarContainer">
+        <div class="calendar-controls">
+          <button class="btn-primary" onclick="prevMonth()">◀ Prev</button>
+          <h3 id="calendarMonthYear" style="color: var(--text-light); margin: 0; min-width: 150px; text-align: center;">Month Year</h3>
+          <button class="btn-primary" onclick="nextMonth()">Next ▶</button>
+        </div>
+        
+        <div class="calendar-days-header">
+          <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+        </div>
+        
+        <div class="calendar-grid" id="calendarGrid">
+          <!-- Calendar days injected here -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section class="section contact-section" id="contact">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-badge">Reach Us</div>
+        <h2 class="section-title">Contact</h2>
+        <p class="section-subtitle">Join our cultural journey</p>
+      </div>
+      <div class="contact-grid">
+        <div class="contact-info">
+          <div class="contact-card">
+            <div class="contact-icon">🏛️</div>
+            <h4>Location</h4>
+            <p id="contact-location-display">KITS College Campus<br>Cultural Activities Block<br>Andhra Pradesh, India</p>
+          </div>
+          <div class="contact-card">
+            <div class="contact-icon">✉️</div>
+            <h4>Email</h4>
+            <p id="contact-email-display">kalavedika@kits.ac.in<br>cultural@kits.ac.in</p>
+          </div>
+          <div class="contact-card">
+            <div class="contact-icon">📞</div>
+            <h4>Phone</h4>
+            <p id="contact-phone-display">+91 98765 43210<br>+91 87654 32109</p>
+          </div>
+          <div class="contact-card">
+            <div class="contact-icon">🕐</div>
+            <h4>Club Hours</h4>
+            <p id="contact-hours-display">Mon – Fri: 4 PM – 7 PM<br>Weekends: 10 AM – 1 PM</p>
+          </div>
+        </div>
+        <div class="contact-join">
+          <h3>Join Kala Vedika</h3>
+          <p>Are you passionate about classical arts? We welcome students from all departments and years to be part of our cultural family.</p>
+          <div class="join-steps">
+            <div class="join-step"><span class="step-num">01</span><span>Attend a rehearsal or workshop</span></div>
+            <div class="join-step"><span class="step-num">02</span><span>Show your talent in the audition</span></div>
+            <div class="join-step"><span class="step-num">03</span><span>Get selected and join the family</span></div>
+          </div>
+          <div class="social-links">
+            <a href="#" class="social-link" aria-label="Instagram">📸</a>
+            <a href="#" class="social-link" aria-label="YouTube">▶️</a>
+            <a href="#" class="social-link" aria-label="Facebook">👥</a>
+            <a href="#" class="social-link" aria-label="Twitter">🐦</a>
+          </div>
+          
+          <div style="margin-top: 2rem; background: var(--surface-light); padding: 1.5rem; border-radius: var(--radius-md); border: 1px solid var(--border);">
+            <h4 style="margin-bottom: 1rem; color: var(--gold); font-family: 'Cinzel', serif;">Leave Feedback</h4>
+            <form onsubmit="submitFeedbackForm(event)">
+              <div class="form-group"><input type="text" id="fbName" placeholder="Your Name" required></div>
+              <div class="form-group"><input type="email" id="fbEmail" placeholder="Your Email" required></div>
+              <div class="form-group"><textarea id="fbMessage" placeholder="Your message..." required style="min-height: 80px;"></textarea></div>
+              <button type="submit" class="btn-primary btn-full" id="fbSubmitBtn">Send Feedback</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-logo">
+        <img src="logo_final.jpg" alt="KV Logo" style="height: 60px; border-radius: 50%; object-fit: cover; aspect-ratio: 1/1; margin-right: 15px;">
+        <div>
+          <div class="footer-title">KALA VEDIKA</div>
+          <div class="footer-tagline">Cultural Organization – KITS</div>
+        </div>
+      </div>
+      <div class="footer-links">
+        <a href="#home">Home</a>
+        <a href="#about">About</a>
+        <a href="#founders">Founders</a>
+        <a href="#members">Members</a>
+        <a href="#achievements">Achievements</a>
+        <a href="#events">Events</a>
+      </div>
+      <div class="footer-copy">© 2026 Kala Vedika. Preserving heritage, inspiring future.</div>
+    </div>
+  </footer>
+
+  <!-- ADMIN LOGIN MODAL -->
+  <div class="modal-overlay" id="adminModal" onclick="closeAdminModal(event)">
+    <div class="modal admin-modal">
+      <button class="modal-close" onclick="closeAdminModal()">✕</button>
+      <div class="modal-header">
+        <div class="modal-icon">🔐</div>
+        <h2>Admin Login</h2>
+        <p>Access the management dashboard</p>
+      </div>
+      <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label for="loginEmail">Email</label>
+          <input type="text" id="loginEmail" required />
+        </div>
+        <div class="form-group">
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" required />
+        </div>
+        <div class="form-error" id="loginError"></div>
+        <button type="submit" class="btn-primary btn-full" id="loginBtn">Login</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ADMIN DASHBOARD MODAL -->
+  <div class="modal-overlay" id="dashboardModal" onclick="closeDashboard(event)">
+    <div class="modal dashboard-modal">
+      <button class="modal-close" onclick="closeDashboard()">✕</button>
+      <div class="dashboard-header">
+        <div class="dashboard-title">
+          <span>🎛️</span>
+          <div>
+            <h2>Admin Dashboard</h2>
+            <p id="adminEmailDisplay">admin@kits</p>
+          </div>
+        </div>
+        <button class="btn-danger" onclick="handleLogout()">Logout</button>
+      </div>
+      <div class="dashboard-tabs">
+        <button class="tab-btn active" onclick="switchTab('members')">Members</button>
+        <button class="tab-btn" onclick="switchTab('founders')">Founders</button>
+        <button class="tab-btn" onclick="switchTab('achievements')">Achievements</button>
+        <button class="tab-btn" onclick="switchTab('events')">Events</button>
+        <button class="tab-btn" onclick="switchTab('feedback')">Feedback</button>
+        <button class="tab-btn" onclick="switchTab('contact')">Contact Info</button>
+      </div>
+      <div class="dashboard-content" id="dashboardContent">
+        <!-- Dynamic content -->
+      </div>
+    </div>
+  </div>
+
+  <!-- GENERIC ITEM MODAL -->
+  <div class="modal-overlay" id="itemModal" onclick="closeItemModal(event)">
+    <div class="modal item-modal">
+      <button class="modal-close" onclick="closeItemModal()">✕</button>
+      <div id="itemModalContent"></div>
+    </div>
+  </div>
+
+  <!-- TODAY'S EVENT MODAL -->
+  <div class="modal-overlay" id="todayEventModal" onclick="closeTodayEvent(event)">
+    <div class="modal item-modal" style="text-align: center; max-width: 500px;">
+      <button class="modal-close" onclick="closeTodayEvent()">✕</button>
+      <div class="section-badge" style="margin-bottom:1rem; display:inline-block;">Happening Today!</div>
+      <div id="todayEventContent"></div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
