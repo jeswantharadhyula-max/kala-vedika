@@ -51,6 +51,19 @@ app.use('/api/events', require('./routes/events'));
 app.use('/api/feedback', require('./routes/feedback'));
 app.use('/api/contact', require('./routes/contact'));
 
+// TEMPORARY ROUTE TO WIPE DATA
+app.get('/api/wipe-data', async (req, res) => {
+  try {
+    await require('./models/Member').deleteMany({});
+    await require('./models/Founder').deleteMany({});
+    await require('./models/Achievement').deleteMany({});
+    await require('./models/Event').deleteMany({});
+    res.send('Successfully emptied Members, Founders, Achievements, and Events data! You can go back to the website now.');
+  } catch (err) {
+    res.status(500).send('Error wiping data: ' + err.message);
+  }
+});
+
 // Serve SPA
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
