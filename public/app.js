@@ -246,7 +246,7 @@ function filterMembers(roleFilter) {
   }
 
   container.innerHTML = filtered.map(m => `
-    <div class="member-card reveal" onclick="showMemberDetails(${sanitizeText(String(m.id))})">
+    <div class="member-card reveal" onclick="showMemberDetails('${m._id}')">
       <div class="member-avatar">
         ${m.photo ? `<img src="${sanitizeText(m.photo)}" alt="${sanitizeText(m.name)}" loading="lazy">` : `<span>${sanitizeText(m.name.charAt(0))}</span>`}
       </div>
@@ -261,7 +261,7 @@ function filterMembers(roleFilter) {
 }
 
 function showMemberDetails(id) {
-  const member = state.members.find(m => m.id === id);
+  const member = state.members.find(m => String(m._id) === String(id));
   if (!member) return;
   
   const content = document.getElementById('itemModalContent');
@@ -345,7 +345,7 @@ function renderCalendar() {
     html += `
       <div class="calendar-day ${isToday ? 'today' : ''}" onclick="handleCalendarClick('${sanitizeText(cellDateStr)}')">
         <div class="calendar-day-num">${d}</div>
-        ${dayEvents.map(e => `<div class="event-badge" onclick="event.stopPropagation(); showEventDetails(${sanitizeText(String(e.id))})"> ${sanitizeText(e.title)}</div>`).join('')}
+        ${dayEvents.map(e => `<div class="event-badge" onclick="event.stopPropagation(); showEventDetails('${e._id}')"> ${sanitizeText(e.title)}</div>`).join('')}
       </div>
     `;
   }
@@ -369,7 +369,7 @@ function handleCalendarClick(dateStr) {
 }
 
 function showEventDetails(id) {
-  const e = state.events.find(ev => ev.id === id);
+  const e = state.events.find(ev => String(ev._id) === String(id));
   if (!e) return;
   
   const content = document.getElementById('itemModalContent');

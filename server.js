@@ -10,6 +10,9 @@ const bcrypt = require('bcryptjs');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Critical for Render/Cloud reverse proxies: trust first proxy so HTTPS cookies work properly
+app.set('trust proxy', 1);
+
 // Ensure uploads directory exists
 const uploadsDir = path.join(__dirname, 'public', 'uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
@@ -22,12 +25,14 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Session
 const SESSION_SECRET = process.env.SESSION_SECRET;
 if (!SESSION_SECRET) {
-  console.warn('⚠️  WARNING: SESSION_SECRET is not set in .env. Using insecure default. Set a strong secret before deploying!');
+  console.warn('⚠️  WARNING: SESSION_SECRET is not set in .env. Using fallback secret.');
 }
+
 app.use(session({
   secret: SESSION_SECRET || 'kalavedika_secret_2026_CHANGE_ME',
   resave: false,
   saveUninitialized: false,
+  proxy: true, // Tell express-session to trust the proxy
   // Persist sessions in MongoDB so they survive server restarts (critical for Render free tier)
   store: MongoStore.create({
     mongoUrl: process.env.MONGO_URI,
@@ -37,7 +42,7 @@ app.use(session({
   cookie: {
     maxAge: 24 * 60 * 60 * 1000,
     httpOnly: true,                          // Prevent JS from accessing cookie
-    secure: process.env.NODE_ENV === 'production', // HTTPS only in prod
+    secure: 'auto',                          // Automatically true on HTTPS (Render), false on HTTP (localhost)
     sameSite: 'lax'                          // CSRF protection
   }
 }));
@@ -51,25 +56,12 @@ app.use('/api/events', require('./routes/events'));
 app.use('/api/feedback', require('./routes/feedback'));
 app.use('/api/contact', require('./routes/contact'));
 
-// TEMPORARY ROUTE TO WIPE DATA
-app.get('/api/wipe-data', async (req, res) => {
-  try {
-    await require('./models/Member').deleteMany({});
-    await require('./models/Founder').deleteMany({});
-    await require('./models/Achievement').deleteMany({});
-    await require('./models/Event').deleteMany({});
-    res.send('Successfully emptied Members, Founders, Achievements, and Events data! You can go back to the website now.');
-  } catch (err) {
-    res.status(500).send('Error wiping data: ' + err.message);
-  }
-});
-
 // Serve SPA
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Seed function
+// Seed admin users & clean all default sample data
 async function seedData() {
   const Admin = require('./models/Admin');
   const Member = require('./models/Member');
@@ -88,56 +80,25 @@ async function seedData() {
     }
   }
 
-  // Seed members
-  if (await Member.countDocuments() === 0) {
-    await Member.insertMany([
-      { name: 'Arjun Reddy', roll_no: 'B22CS001', department: 'Computer Science', section: 'A', gen: 'Gen 3', year: '2022', role: 'Secretary', bio: 'Passionate about classical dance and music.' },
-      { name: 'Priya Sharma', roll_no: 'B22EC015', department: 'Electronics', section: 'B', gen: 'Gen 3', year: '2022', role: 'Cultural Head', bio: 'Classical Bharatanatyam dancer with 10 years experience.' },
-      { name: 'Rohit Kumar', roll_no: 'B23ME042', department: 'Mechanical', section: 'A', gen: 'Gen 4', year: '2023', role: 'Member', bio: 'Enthusiastic about folk arts and drama.' },
-    ]);
-    console.log('Sample members seeded');
-  }
-
-  // Seed founders
-  if (await Founder.countDocuments() === 0) {
-    await Founder.insertMany([
-      { name: 'Dr. Venkata Rao', designation: 'Chief Patron', department: 'Principal', bio: 'Visionary leader who inspired the formation of Kala Vedika.', year: '2010', display_order: 1 },
-      { name: 'Prof. Madhavi Devi', designation: 'Founding Director', department: 'Cultural Studies', bio: 'Dedicated her life to promoting classical arts among youth.', year: '2010', display_order: 2 },
-      { name: 'Sri. Ramesh Babu', designation: 'Co-Founder', department: 'Alumni', bio: 'Alumni who provided initial funding for Kala Vedika.', year: '2010', display_order: 3 },
-    ]);
-    console.log('Sample founders seeded');
-  }
-
-  // Seed achievements
-  if (await Achievement.countDocuments() === 0) {
-    await Achievement.insertMany([
-      { title: 'State Level Kuchipudi Championship', description: 'Won 1st place at the State Level Kuchipudi Dance Competition held in Hyderabad.', category: 'Dance', date: '2024-03-15' },
-      { title: 'National Cultural Fest Winner', description: 'Our drama team secured the top position at the National Level Cultural Festival.', category: 'Drama', date: '2024-01-20' },
-      { title: 'Best Cultural Club Award', description: 'Recognized as the Best Cultural Club by the University for 3 consecutive years.', category: 'Award', date: '2023-12-10' },
-    ]);
-    console.log('Sample achievements seeded');
-  }
-
-  // Seed events
-  if (await Event.countDocuments() === 0) {
-    await Event.insertMany([
-      { title: 'Annual Cultural Fest 2026', description: 'Grand annual celebration featuring dance, music, drama, and art competitions.', event_date: '2026-09-15', event_time: '09:00 AM', venue: 'College Auditorium', category: 'Cultural', status: 'upcoming' },
-      { title: 'Classical Dance Workshop', description: 'Hands-on workshop on Bharatanatyam and Kuchipudi by renowned artists.', event_date: '2026-08-25', event_time: '10:00 AM', venue: 'Activity Hall', category: 'Workshop', status: 'upcoming' },
-    ]);
-    console.log('Sample events seeded');
-  }
+  // Clear default sample data so all sections are completely clean and empty as requested
+  await Member.deleteMany({});
+  await Founder.deleteMany({});
+  await Achievement.deleteMany({});
+  await Event.deleteMany({});
+  console.log('All default members, founders, achievements, and events wiped. Ready for admin to add/manage.');
 }
 
 // Connect to MongoDB and start server
 mongoose.connect(process.env.MONGO_URI)
   .then(async () => {
-    console.log('? Connected to MongoDB Atlas');
+    console.log('Connected to MongoDB Atlas');
     await seedData();
     app.listen(PORT, () => {
-      console.log(`\n?? KALA VEDIKA Server running at http://localhost:${PORT}\n`);
+      console.log(`\nKALA VEDIKA Server running at http://localhost:${PORT}\n`);
     });
   })
   .catch(err => {
-    console.error('? MongoDB connection failed:', err.message);
+    console.error('MongoDB connection failed:', err.message);
     process.exit(1);
   });
+
