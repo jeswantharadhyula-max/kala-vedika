@@ -2,6 +2,17 @@
    KALA VEDIKA – Main Application Logic
    ===================================================== */
 
+/* --- SECURITY: HTML SANITIZER --- */
+function sanitizeText(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
 let state = {
   founders: [],
   members: [],
@@ -167,10 +178,11 @@ function renderContact() {
   const phone = document.getElementById('contact-phone-display');
   const hours = document.getElementById('contact-hours-display');
   
-  if (loc && state.contact.location) loc.innerHTML = state.contact.location.replace(/\n/g, '<br>');
-  if (email && state.contact.email) email.innerHTML = state.contact.email.replace(/\n/g, '<br>');
-  if (phone && state.contact.phone) phone.innerHTML = state.contact.phone.replace(/\n/g, '<br>');
-  if (hours && state.contact.hours) hours.innerHTML = state.contact.hours.replace(/\n/g, '<br>');
+  // Use sanitized HTML to prevent XSS from contact info fields
+  if (loc && state.contact.location) loc.innerHTML = sanitizeText(state.contact.location).replace(/\n/g, '<br>');
+  if (email && state.contact.email) email.innerHTML = sanitizeText(state.contact.email).replace(/\n/g, '<br>');
+  if (phone && state.contact.phone) phone.innerHTML = sanitizeText(state.contact.phone).replace(/\n/g, '<br>');
+  if (hours && state.contact.hours) hours.innerHTML = sanitizeText(state.contact.hours).replace(/\n/g, '<br>');
 }
 
 async function fetchFeedback() {
@@ -194,15 +206,15 @@ function renderFounders(data) {
   container.innerHTML = data.map(f => `
     <div class="founder-card reveal">
       <div class="founder-photo">
-        ${f.photo ? `<img src="${f.photo}" alt="${f.name}" loading="lazy">` : `<div class="founder-photo-placeholder">👤</div>`}
-        <div class="founder-order-badge">${f.display_order}</div>
+        ${f.photo ? `<img src="${sanitizeText(f.photo)}" alt="${sanitizeText(f.name)}" loading="lazy">` : `<div class="founder-photo-placeholder">👤</div>`}
+        <div class="founder-order-badge">${sanitizeText(String(f.display_order))}</div>
       </div>
       <div class="founder-info">
-        <h3 class="founder-name">${f.name}</h3>
-        <div class="founder-designation">${f.designation}</div>
-        ${f.department ? `<div class="founder-dept">${f.department}</div>` : ''}
-        ${f.bio ? `<div class="founder-bio">${f.bio}</div>` : ''}
-        ${f.year ? `<div class="founder-year">Since ${f.year}</div>` : ''}
+        <h3 class="founder-name">${sanitizeText(f.name)}</h3>
+        <div class="founder-designation">${sanitizeText(f.designation)}</div>
+        ${f.department ? `<div class="founder-dept">${sanitizeText(f.department)}</div>` : ''}
+        ${f.bio ? `<div class="founder-bio">${sanitizeText(f.bio)}</div>` : ''}
+        ${f.year ? `<div class="founder-year">Since ${sanitizeText(f.year)}</div>` : ''}
       </div>
     </div>
   `).join('');
@@ -234,14 +246,14 @@ function filterMembers(roleFilter) {
   }
 
   container.innerHTML = filtered.map(m => `
-    <div class="member-card reveal" onclick="showMemberDetails(${m.id})">
+    <div class="member-card reveal" onclick="showMemberDetails(${sanitizeText(String(m.id))})">
       <div class="member-avatar">
-        ${m.photo ? `<img src="${m.photo}" alt="${m.name}" loading="lazy">` : `<span>${m.name.charAt(0)}</span>`}
+        ${m.photo ? `<img src="${sanitizeText(m.photo)}" alt="${sanitizeText(m.name)}" loading="lazy">` : `<span>${sanitizeText(m.name.charAt(0))}</span>`}
       </div>
-      <h3 class="member-name">${m.name}</h3>
-      <div class="member-role">${m.role}</div>
-      <div class="member-dept">${m.department}</div>
-      <div class="member-section">Year ${m.year || '?'} • Sec ${m.section} • ${m.gen || 'Gen X'}</div>
+      <h3 class="member-name">${sanitizeText(m.name)}</h3>
+      <div class="member-role">${sanitizeText(m.role)}</div>
+      <div class="member-dept">${sanitizeText(m.department)}</div>
+      <div class="member-section">Year ${sanitizeText(String(m.year || '?'))} • Sec ${sanitizeText(m.section)} • ${sanitizeText(m.gen || 'Gen X')}</div>
     </div>
   `).join('');
   
@@ -256,12 +268,12 @@ function showMemberDetails(id) {
   content.innerHTML = `
     <div style="text-align: center;">
       <div class="member-avatar" style="width:100%; height:250px; border-radius:12px; font-size:5rem; margin:0 auto 1.5rem;">
-        ${member.photo ? `<img src="${member.photo}" alt="${member.name}">` : `<span>${member.name.charAt(0)}</span>`}
+        ${member.photo ? `<img src="${sanitizeText(member.photo)}" alt="${sanitizeText(member.name)}">` : `<span>${sanitizeText(member.name.charAt(0))}</span>`}
       </div>
-      <h2 style="font-family:'Cinzel', serif; color:var(--gold); font-size:1.5rem; margin-bottom:0.5rem;">${member.name}</h2>
-      <div style="color:var(--text-muted); font-weight:600; letter-spacing:0.1em; text-transform:uppercase; font-size:0.8rem; margin-bottom:1rem;">${member.role}</div>
-      <div style="display:inline-block; border:1px solid rgba(212,168,67,0.3); padding:0.3rem 1rem; border-radius:50px; font-size:0.8rem; margin-bottom:1.5rem;">Year ${member.year || '?'} • ${member.department} • Sec ${member.section} • ${member.roll_no || 'N/A'} • ${member.gen || 'Gen X'}</div>
-      ${member.bio ? `<p style="color:var(--text-muted); font-size:0.95rem; line-height:1.6; text-align:left; background:var(--surface); padding:1.5rem; border-radius:var(--radius-sm); border:1px solid var(--border);">${member.bio}</p>` : ''}
+      <h2 style="font-family:'Cinzel', serif; color:var(--gold); font-size:1.5rem; margin-bottom:0.5rem;">${sanitizeText(member.name)}</h2>
+      <div style="color:var(--text-muted); font-weight:600; letter-spacing:0.1em; text-transform:uppercase; font-size:0.8rem; margin-bottom:1rem;">${sanitizeText(member.role)}</div>
+      <div style="display:inline-block; border:1px solid rgba(212,168,67,0.3); padding:0.3rem 1rem; border-radius:50px; font-size:0.8rem; margin-bottom:1.5rem;">Year ${sanitizeText(String(member.year || '?'))} • ${sanitizeText(member.department)} • Sec ${sanitizeText(member.section)} • ${sanitizeText(member.roll_no || 'N/A')} • ${sanitizeText(member.gen || 'Gen X')}</div>
+      ${member.bio ? `<p style="color:var(--text-muted); font-size:0.95rem; line-height:1.6; text-align:left; background:var(--surface); padding:1.5rem; border-radius:var(--radius-sm); border:1px solid var(--border);">${sanitizeText(member.bio)}</p>` : ''}
     </div>
   `;
   itemModal.classList.add('open');
@@ -286,11 +298,11 @@ function filterAchievements(category) {
 
   container.innerHTML = filtered.map(a => `
     <div class="achievement-card reveal">
-      ${a.photo ? `<img src="${a.photo}" style="width:100%; height:160px; object-fit:cover; border-radius:8px; margin-bottom:1rem;">` : `<div class="achievement-icon">🏆</div>`}
-      <div class="achievement-category">${a.category}</div>
-      <h3 class="achievement-title">${a.title}</h3>
-      <p class="achievement-desc">${a.description}</p>
-      ${a.date ? `<div class="achievement-date">${formatDate(a.date)}</div>` : ''}
+      ${a.photo ? `<img src="${sanitizeText(a.photo)}" style="width:100%; height:160px; object-fit:cover; border-radius:8px; margin-bottom:1rem;">` : `<div class="achievement-icon">🏆</div>`}
+      <div class="achievement-category">${sanitizeText(a.category)}</div>
+      <h3 class="achievement-title">${sanitizeText(a.title)}</h3>
+      <p class="achievement-desc">${sanitizeText(a.description)}</p>
+      ${a.date ? `<div class="achievement-date">${sanitizeText(formatDate(a.date))}</div>` : ''}
     </div>
   `).join('');
   
@@ -331,9 +343,9 @@ function renderCalendar() {
     const dayEvents = state.events.filter(e => e.event_date === cellDateStr);
     
     html += `
-      <div class="calendar-day ${isToday ? 'today' : ''}" onclick="handleCalendarClick('${cellDateStr}')">
+      <div class="calendar-day ${isToday ? 'today' : ''}" onclick="handleCalendarClick('${sanitizeText(cellDateStr)}')">
         <div class="calendar-day-num">${d}</div>
-        ${dayEvents.map(e => `<div class="event-badge" onclick="event.stopPropagation(); showEventDetails(${e.id})">${e.title}</div>`).join('')}
+        ${dayEvents.map(e => `<div class="event-badge" onclick="event.stopPropagation(); showEventDetails(${sanitizeText(String(e.id))})"> ${sanitizeText(e.title)}</div>`).join('')}
       </div>
     `;
   }
@@ -363,13 +375,13 @@ function showEventDetails(id) {
   const content = document.getElementById('itemModalContent');
   content.innerHTML = `
     <div style="text-align: center;">
-      ${e.photo ? `<img src="${e.photo}" style="width:100%; max-height:250px; object-fit:cover; border-radius:8px; margin-bottom:1.5rem;">` : ''}
-      <div class="event-category-tag" style="display:inline-block; margin-bottom:1rem; padding: 0.3rem 1rem; border-radius: 50px; background: rgba(212,168,67,0.1); border: 1px solid var(--gold); color: var(--gold); font-weight: bold; font-size: 0.8rem; text-transform: uppercase;">${e.category}</div>
-      <h2 style="font-family:'Cinzel', serif; color:var(--text); font-size:1.8rem; margin-bottom:0.5rem;">${e.title}</h2>
+      ${e.photo ? `<img src="${sanitizeText(e.photo)}" style="width:100%; max-height:250px; object-fit:cover; border-radius:8px; margin-bottom:1.5rem;">` : ''}
+      <div class="event-category-tag" style="display:inline-block; margin-bottom:1rem; padding: 0.3rem 1rem; border-radius: 50px; background: rgba(212,168,67,0.1); border: 1px solid var(--gold); color: var(--gold); font-weight: bold; font-size: 0.8rem; text-transform: uppercase;">${sanitizeText(e.category)}</div>
+      <h2 style="font-family:'Cinzel', serif; color:var(--text); font-size:1.8rem; margin-bottom:0.5rem;">${sanitizeText(e.title)}</h2>
       <div style="display:inline-block; border:1px solid rgba(255,255,255,0.1); background: var(--surface2); padding:0.5rem 1rem; border-radius:8px; font-size:0.9rem; margin-bottom:1.5rem; color: var(--gold-light);">
-        <span>📅 ${formatDate(e.event_date)}</span> | <span>🕐 ${e.event_time}</span> | <span>📍 ${e.venue}</span>
+        <span>📅 ${sanitizeText(formatDate(e.event_date))}</span> | <span>🕐 ${sanitizeText(e.event_time)}</span> | <span>📍 ${sanitizeText(e.venue)}</span>
       </div>
-      <p style="color:var(--text-muted); font-size:1rem; line-height:1.6; text-align:left; background:var(--surface); padding:1.5rem; border-radius:var(--radius-sm); border:1px solid var(--border);">${e.description}</p>
+      <p style="color:var(--text-muted); font-size:1rem; line-height:1.6; text-align:left; background:var(--surface); padding:1.5rem; border-radius:var(--radius-sm); border:1px solid var(--border);">${sanitizeText(e.description)}</p>
     </div>
   `;
   itemModal.classList.add('open');
@@ -388,12 +400,12 @@ function checkTodayEvent() {
     const e = todayEvents[0];
     const content = document.getElementById('todayEventContent');
     content.innerHTML = `
-      ${e.photo ? `<img src="${e.photo}" style="width:100%; max-height:250px; object-fit:cover; border-radius:8px; margin-bottom:1.5rem;">` : ''}
-      <h2 style="font-family:'Cinzel', serif; color:var(--text); font-size:1.8rem; margin-bottom:0.5rem;">${e.title}</h2>
+      ${e.photo ? `<img src="${sanitizeText(e.photo)}" style="width:100%; max-height:250px; object-fit:cover; border-radius:8px; margin-bottom:1.5rem;">` : ''}
+      <h2 style="font-family:'Cinzel', serif; color:var(--text); font-size:1.8rem; margin-bottom:0.5rem;">${sanitizeText(e.title)}</h2>
       <div style="display:inline-block; border:1px solid var(--border); background: var(--surface2); padding:0.5rem 1rem; border-radius:8px; font-size:0.9rem; margin-bottom:1.5rem; color: var(--gold);">
-        <span>🕐 ${e.event_time || 'All Day'}</span> | <span>📍 ${e.venue || 'TBA'}</span>
+        <span>🕐 ${sanitizeText(e.event_time || 'All Day')}</span> | <span>📍 ${sanitizeText(e.venue || 'TBA')}</span>
       </div>
-      <p style="color:var(--text-muted); font-size:1rem; line-height:1.6; background:var(--surface); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--border);">${e.description}</p>
+      <p style="color:var(--text-muted); font-size:1rem; line-height:1.6; background:var(--surface); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--border);">${sanitizeText(e.description)}</p>
       <button class="btn-primary" style="margin-top: 1.5rem;" onclick="closeTodayEvent()">Awesome!</button>
     `;
     setTimeout(() => {
@@ -564,11 +576,11 @@ function renderDashboardContent() {
         <tbody>
           ${state.members.map(m => `
             <tr>
-              <td><strong>${m.name}</strong></td>
-              <td>${m.department} (${m.section})</td>
-              <td>${m.role}</td>
+              <td><strong>${sanitizeText(m.name)}</strong></td>
+              <td>${sanitizeText(m.department)} (${sanitizeText(m.section)})</td>
+              <td>${sanitizeText(m.role)}</td>
               <td class="actions">
-                <button class="btn-icon btn-del" onclick="deleteItem('members', ${m.id})">🗑️</button>
+                <button class="btn-icon btn-del" onclick="deleteItem('members', ${sanitizeText(String(m.id))})">🗑️</button>
               </td>
             </tr>
           `).join('')}
@@ -582,11 +594,11 @@ function renderDashboardContent() {
         <tbody>
           ${state.founders.map(f => `
             <tr>
-              <td>${f.display_order}</td>
-              <td><strong>${f.name}</strong></td>
-              <td>${f.designation}</td>
+              <td>${sanitizeText(String(f.display_order))}</td>
+              <td><strong>${sanitizeText(f.name)}</strong></td>
+              <td>${sanitizeText(f.designation)}</td>
               <td class="actions">
-                <button class="btn-icon btn-del" onclick="deleteItem('founders', ${f.id})">🗑️</button>
+                <button class="btn-icon btn-del" onclick="deleteItem('founders', ${sanitizeText(String(f.id))})">🗑️</button>
               </td>
             </tr>
           `).join('')}
@@ -600,11 +612,11 @@ function renderDashboardContent() {
         <tbody>
           ${state.achievements.map(a => `
             <tr>
-              <td><strong>${a.title}</strong></td>
-              <td>${a.category}</td>
-              <td>${a.date}</td>
+              <td><strong>${sanitizeText(a.title)}</strong></td>
+              <td>${sanitizeText(a.category)}</td>
+              <td>${sanitizeText(a.date)}</td>
               <td class="actions">
-                <button class="btn-icon btn-del" onclick="deleteItem('achievements', ${a.id})">🗑️</button>
+                <button class="btn-icon btn-del" onclick="deleteItem('achievements', ${sanitizeText(String(a.id))})">🗑️</button>
               </td>
             </tr>
           `).join('')}
@@ -618,11 +630,11 @@ function renderDashboardContent() {
         <tbody>
           ${state.events.map(e => `
             <tr>
-              <td><strong>${e.title}</strong></td>
-              <td>${e.event_date}</td>
-              <td><span class="event-status ${e.status}">${e.status}</span></td>
+              <td><strong>${sanitizeText(e.title)}</strong></td>
+              <td>${sanitizeText(e.event_date)}</td>
+              <td><span class="event-status ${sanitizeText(e.status)}">${sanitizeText(e.status)}</span></td>
               <td class="actions">
-                <button class="btn-icon btn-del" onclick="deleteItem('events', ${e.id})">🗑️</button>
+                <button class="btn-icon btn-del" onclick="deleteItem('events', ${sanitizeText(String(e.id))})">🗑️</button>
               </td>
             </tr>
           `).join('')}
@@ -637,12 +649,12 @@ function renderDashboardContent() {
           <div style="background:var(--surface); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--border);">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.5rem;">
               <div>
-                <strong>${f.name}</strong> &lt;${f.email}&gt;
-                <div style="font-size:0.8rem; color:var(--text-muted);">${formatDate(f.created_at)}</div>
+                <strong>${sanitizeText(f.name)}</strong> &lt;${sanitizeText(f.email)}&gt;
+                <div style="font-size:0.8rem; color:var(--text-muted);">${sanitizeText(formatDate(f.created_at))}</div>
               </div>
-              <button class="btn-icon btn-del" onclick="deleteItem('feedback', ${f.id})">🗑️</button>
+              <button class="btn-icon btn-del" onclick="deleteItem('feedback', ${sanitizeText(String(f.id))})">🗑️</button>
             </div>
-            <p style="color:var(--text-light);">${f.message}</p>
+            <p style="color:var(--text-light);">${sanitizeText(f.message)}</p>
           </div>
         `).join('')}
       </div>
@@ -742,10 +754,10 @@ function openCreateModal(type, prefillDate = '') {
   let formHtml = '';
   
   if (type === 'members') {
-    let genOptions = '';
+    let genOptions = '<option value="" disabled selected>-- Select Generation --</option>';
     for(let i=1; i<=100; i++) genOptions += `<option value="Gen ${i}">Gen ${i}</option>`;
     
-    let yearOptions = '';
+    let yearOptions = '<option value="" disabled selected>-- Select Year --</option>';
     for(let i=1; i<=4; i++) yearOptions += `<option value="${i}">Year ${i}</option>`;
     
     formHtml = `
@@ -755,11 +767,11 @@ function openCreateModal(type, prefillDate = '') {
         <div class="form-group"><label>Roll No</label><input type="text" name="roll_no" required></div>
         <div class="form-group"><label>Department</label><input type="text" name="department" required></div>
         <div class="form-group"><label>Section</label><input type="text" name="section" required></div>
-        <div class="form-group"><label>Year</label><select name="year">${yearOptions}</select></div>
-        <div class="form-group"><label>Generation</label><select name="gen">${genOptions}</select></div>
-        <div class="form-group"><label>Role</label><input type="text" name="role" value="Member"></div>
+        <div class="form-group"><label>Year</label><select name="year" required>${yearOptions}</select></div>
+        <div class="form-group"><label>Generation</label><select name="gen" required>${genOptions}</select></div>
+        <div class="form-group"><label>Role</label><input type="text" name="role" placeholder="e.g. Member, Secretary, Cultural Head" required></div>
         <div class="form-group"><label>Bio</label><textarea name="bio"></textarea></div>
-        <div class="form-group"><label>Photo</label><input type="file" name="photo" accept="image/*"></div>
+        <div class="form-group"><label>Photo</label><input type="file" name="photo" accept="image/jpeg,image/png,image/webp,image/gif"></div>
         <button type="submit" class="btn-primary btn-full">Save Member</button>
       </form>
     `;
@@ -768,18 +780,19 @@ function openCreateModal(type, prefillDate = '') {
       <h2 class="item-modal-title">Add New Event</h2>
       <form onsubmit="handleFormSubmit(event, 'events')">
         <div class="form-group"><label>Title</label><input type="text" name="title" required></div>
-        <div class="form-group"><label>Date (YYYY-MM-DD)</label><input type="date" name="event_date" value="${prefillDate}" required></div>
-        <div class="form-group"><label>Time (e.g. 10:00 AM)</label><input type="text" name="event_time"></div>
+        <div class="form-group"><label>Date (YYYY-MM-DD)</label><input type="date" name="event_date" value="${sanitizeText(prefillDate)}" required></div>
+        <div class="form-group"><label>Time (e.g. 10:00 AM)</label><input type="text" name="event_time" placeholder="e.g. 10:00 AM"></div>
         <div class="form-group"><label>Venue</label><input type="text" name="venue" required></div>
-        <div class="form-group"><label>Category</label><input type="text" name="category" value="Cultural"></div>
+        <div class="form-group"><label>Category</label><input type="text" name="category" placeholder="e.g. Cultural, Workshop, Competition" required></div>
         <div class="form-group"><label>Status</label>
-          <select name="status">
+          <select name="status" required>
+            <option value="" disabled selected>-- Select Status --</option>
             <option value="upcoming">Upcoming</option>
             <option value="completed">Completed</option>
           </select>
         </div>
         <div class="form-group"><label>Description</label><textarea name="description" required></textarea></div>
-        <div class="form-group"><label>Photo</label><input type="file" name="photo" accept="image/*"></div>
+        <div class="form-group"><label>Photo</label><input type="file" name="photo" accept="image/jpeg,image/png,image/webp,image/gif"></div>
         <button type="submit" class="btn-primary btn-full">Save Event</button>
       </form>
     `;
@@ -788,10 +801,10 @@ function openCreateModal(type, prefillDate = '') {
       <h2 class="item-modal-title">Add New Achievement</h2>
       <form onsubmit="handleFormSubmit(event, 'achievements')">
         <div class="form-group"><label>Title</label><input type="text" name="title" required></div>
-        <div class="form-group"><label>Category</label><input type="text" name="category" value="General"></div>
-        <div class="form-group"><label>Date (YYYY-MM-DD)</label><input type="date" name="date"></div>
+        <div class="form-group"><label>Category</label><input type="text" name="category" placeholder="e.g. Dance, Music, Drama, Award" required></div>
+        <div class="form-group"><label>Date (YYYY-MM-DD)</label><input type="date" name="date" required></div>
         <div class="form-group"><label>Description</label><textarea name="description" required></textarea></div>
-        <div class="form-group"><label>Photo</label><input type="file" name="photo" accept="image/*"></div>
+        <div class="form-group"><label>Photo</label><input type="file" name="photo" accept="image/jpeg,image/png,image/webp,image/gif"></div>
         <button type="submit" class="btn-primary btn-full">Save Achievement</button>
       </form>
     `;
@@ -800,12 +813,12 @@ function openCreateModal(type, prefillDate = '') {
       <h2 class="item-modal-title">Add New Founder</h2>
       <form onsubmit="handleFormSubmit(event, 'founders')">
         <div class="form-group"><label>Name</label><input type="text" name="name" required></div>
-        <div class="form-group"><label>Designation</label><input type="text" name="designation" required></div>
-        <div class="form-group"><label>Department</label><input type="text" name="department"></div>
-        <div class="form-group"><label>Year</label><input type="text" name="year" value="2025"></div>
-        <div class="form-group"><label>Display Order</label><input type="number" name="display_order" value="0"></div>
+        <div class="form-group"><label>Designation</label><input type="text" name="designation" required placeholder="e.g. Chief Patron, Founding Director"></div>
+        <div class="form-group"><label>Department</label><input type="text" name="department" placeholder="e.g. Principal, Cultural Studies"></div>
+        <div class="form-group"><label>Year</label><input type="text" name="year" placeholder="e.g. 2025" required></div>
+        <div class="form-group"><label>Display Order</label><input type="number" name="display_order" placeholder="e.g. 1" min="1" required></div>
         <div class="form-group"><label>Bio</label><textarea name="bio"></textarea></div>
-        <div class="form-group"><label>Photo</label><input type="file" name="photo" accept="image/*"></div>
+        <div class="form-group"><label>Photo</label><input type="file" name="photo" accept="image/jpeg,image/png,image/webp,image/gif"></div>
         <button type="submit" class="btn-primary btn-full">Save Founder</button>
       </form>
     `;

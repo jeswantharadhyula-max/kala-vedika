@@ -6,11 +6,20 @@ const router = express.Router();
 const Event = require('../models/Event');
 const { requireAdmin } = require('../middleware/auth');
 
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, path.join(__dirname, '../public/uploads')),
   filename: (req, file, cb) => cb(null, 'event_' + Date.now() + path.extname(file.originalname))
 });
-const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
+const fileFilter = (req, file, cb) => {
+  if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only image files (JPEG, PNG, WebP, GIF) are allowed'), false);
+  }
+};
+const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 }, fileFilter });
 
 router.get('/', async (req, res) => {
   try {
@@ -24,7 +33,9 @@ router.post('/', requireAdmin, upload.single('photo'), async (req, res) => {
     const { title, description, event_date, event_time, venue, category, status } = req.body;
     if (!title || !description || !event_date) return res.status(400).json({ error: 'Title, description, and event_date are required' });
     const photo = req.file ? '/uploads/' + req.file.filename : null;
-    const event = new Event({ title, description, event_date, event_time: event_time || '', venue: venue || '', category: category || 'Cultural', status: status || 'upcoming', photo });
+    const VALID_STATUSES = ['upcoming', 'completed'];
+    const safeStatus = VALID_STATUSES.includes(status) ? status : 'upcoming';
+    const event = new Event({ title, description, event_date, event_time: event_time || '', venue: venue || '', category: category || '', status: safeStatus, photo });
     await event.save();
     res.status(201).json(event);
   } catch (e) { res.status(500).json({ error: e.message }); }

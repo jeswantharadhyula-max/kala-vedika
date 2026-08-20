@@ -19,11 +19,20 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Session
+const SESSION_SECRET = process.env.SESSION_SECRET;
+if (!SESSION_SECRET) {
+  console.warn('⚠️  WARNING: SESSION_SECRET is not set in .env. Using insecure default. Set a strong secret before deploying!');
+}
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'kalavedika_secret_2026',
+  secret: SESSION_SECRET || 'kalavedika_secret_2026_CHANGE_ME',
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 24 * 60 * 60 * 1000 }
+  cookie: {
+    maxAge: 24 * 60 * 60 * 1000,
+    httpOnly: true,                          // Prevent JS from accessing cookie
+    secure: process.env.NODE_ENV === 'production', // HTTPS only in prod
+    sameSite: 'lax'                          // CSRF protection
+  }
 }));
 
 // Routes

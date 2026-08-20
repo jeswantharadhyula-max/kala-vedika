@@ -6,11 +6,20 @@ const router = express.Router();
 const Achievement = require('../models/Achievement');
 const { requireAdmin } = require('../middleware/auth');
 
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, path.join(__dirname, '../public/uploads')),
   filename: (req, file, cb) => cb(null, 'achievement_' + Date.now() + path.extname(file.originalname))
 });
-const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
+const fileFilter = (req, file, cb) => {
+  if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only image files (JPEG, PNG, WebP, GIF) are allowed'), false);
+  }
+};
+const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 }, fileFilter });
 
 router.get('/', async (req, res) => {
   try {
@@ -24,7 +33,7 @@ router.post('/', requireAdmin, upload.single('photo'), async (req, res) => {
     const { title, description, category, date } = req.body;
     if (!title || !description) return res.status(400).json({ error: 'Title and description are required' });
     const photo = req.file ? '/uploads/' + req.file.filename : null;
-    const achievement = new Achievement({ title, description, category: category || 'General', date: date || '', photo });
+    const achievement = new Achievement({ title, description, category: category || '', date: date || '', photo });
     await achievement.save();
     res.status(201).json(achievement);
   } catch (e) { res.status(500).json({ error: e.message }); }
