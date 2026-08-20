@@ -580,7 +580,7 @@ function renderDashboardContent() {
               <td>${sanitizeText(m.department)} (${sanitizeText(m.section)})</td>
               <td>${sanitizeText(m.role)}</td>
               <td class="actions">
-                <button class="btn-icon btn-del" onclick="deleteItem('members', ${sanitizeText(String(m.id))})">🗑️</button>
+                <button class="btn-icon btn-del" onclick="deleteItem('members', '${m._id}')">🗑️</button>
               </td>
             </tr>
           `).join('')}
@@ -598,7 +598,7 @@ function renderDashboardContent() {
               <td><strong>${sanitizeText(f.name)}</strong></td>
               <td>${sanitizeText(f.designation)}</td>
               <td class="actions">
-                <button class="btn-icon btn-del" onclick="deleteItem('founders', ${sanitizeText(String(f.id))})">🗑️</button>
+                <button class="btn-icon btn-del" onclick="deleteItem('founders', '${f._id}')">🗑️</button>
               </td>
             </tr>
           `).join('')}
@@ -616,7 +616,7 @@ function renderDashboardContent() {
               <td>${sanitizeText(a.category)}</td>
               <td>${sanitizeText(a.date)}</td>
               <td class="actions">
-                <button class="btn-icon btn-del" onclick="deleteItem('achievements', ${sanitizeText(String(a.id))})">🗑️</button>
+                <button class="btn-icon btn-del" onclick="deleteItem('achievements', '${a._id}')">🗑️</button>
               </td>
             </tr>
           `).join('')}
@@ -634,7 +634,7 @@ function renderDashboardContent() {
               <td>${sanitizeText(e.event_date)}</td>
               <td><span class="event-status ${sanitizeText(e.status)}">${sanitizeText(e.status)}</span></td>
               <td class="actions">
-                <button class="btn-icon btn-del" onclick="deleteItem('events', ${sanitizeText(String(e.id))})">🗑️</button>
+                <button class="btn-icon btn-del" onclick="deleteItem('events', '${e._id}')">🗑️</button>
               </td>
             </tr>
           `).join('')}
@@ -652,7 +652,7 @@ function renderDashboardContent() {
                 <strong>${sanitizeText(f.name)}</strong> &lt;${sanitizeText(f.email)}&gt;
                 <div style="font-size:0.8rem; color:var(--text-muted);">${sanitizeText(formatDate(f.created_at))}</div>
               </div>
-              <button class="btn-icon btn-del" onclick="deleteItem('feedback', ${sanitizeText(String(f.id))})">🗑️</button>
+              <button class="btn-icon btn-del" onclick="deleteItem('feedback', '${f._id}')">🗑️</button>
             </div>
             <p style="color:var(--text-light);">${sanitizeText(f.message)}</p>
           </div>
