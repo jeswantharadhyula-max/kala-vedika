@@ -726,6 +726,10 @@ async function updateContactInfo(e) {
 }
 
 async function deleteItem(type, id) {
+  if (!id || id === 'undefined') {
+    showToast('Invalid item ID — cannot delete', 'error');
+    return;
+  }
   if (!confirm(`Are you sure you want to delete this item?`)) return;
   
   try {
@@ -740,12 +744,19 @@ async function deleteItem(type, id) {
       if (type === 'feedback') await fetchFeedback();
       
       if (dashboardModal.classList.contains('open')) renderDashboardContent();
+    } else if (res.status === 401) {
+      // Session expired (e.g. server restarted) — reset admin state
+      state.isAdmin = false;
+      state.adminEmail = null;
+      adminBtn.innerText = 'Admin Login';
+      dashboardModal.classList.remove('open');
+      showToast('Session expired. Please log in again.', 'error');
     } else {
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       showToast(data.error || 'Failed to delete', 'error');
     }
   } catch (err) {
-    showToast('Network error', 'error');
+    showToast('Network error — please try again', 'error');
   }
 }
 
@@ -854,12 +865,19 @@ async function handleFormSubmit(e, type) {
       if (type === 'events') { await fetchEvents(); updateStats(); }
       
       if (dashboardModal.classList.contains('open')) renderDashboardContent();
+    } else if (res.status === 401) {
+      state.isAdmin = false;
+      state.adminEmail = null;
+      adminBtn.innerText = 'Admin Login';
+      dashboardModal.classList.remove('open');
+      closeItemModal();
+      showToast('Session expired. Please log in again.', 'error');
     } else {
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       showToast(data.error || 'Failed to save', 'error');
     }
   } catch (err) {
-    showToast('Network error', 'error');
+    showToast('Network error — please try again', 'error');
   } finally {
     btn.innerText = 'Save';
     btn.disabled = false;

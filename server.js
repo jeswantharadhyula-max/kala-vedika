@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
+const MongoStore = require('connect-mongo');
 const path = require('path');
 const fs = require('fs');
 const mongoose = require('mongoose');
@@ -27,6 +28,12 @@ app.use(session({
   secret: SESSION_SECRET || 'kalavedika_secret_2026_CHANGE_ME',
   resave: false,
   saveUninitialized: false,
+  // Persist sessions in MongoDB so they survive server restarts (critical for Render free tier)
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGO_URI,
+    collectionName: 'sessions',
+    ttl: 24 * 60 * 60 // 24 hours in seconds
+  }),
   cookie: {
     maxAge: 24 * 60 * 60 * 1000,
     httpOnly: true,                          // Prevent JS from accessing cookie
