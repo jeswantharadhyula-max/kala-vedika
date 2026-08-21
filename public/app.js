@@ -101,18 +101,21 @@ function toggleMenu() {
   navLinks.classList.toggle('open');
 }
 
-function scrollTo(selector) {
-  const el = document.querySelector(selector);
+function scrollToSection(selector) {
+  if (!selector) return;
+  const targetId = selector.startsWith('#') ? selector.slice(1) : selector;
+  const el = document.getElementById(targetId) || document.querySelector(selector);
   if (el) {
-    el.scrollIntoView({ behavior: 'smooth' });
-    navLinks.classList.remove('open');
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (navLinks) navLinks.classList.remove('open');
   }
 }
+window.scrollToSection = scrollToSection;
 
 document.querySelectorAll('.nav-link').forEach(link => {
   link.addEventListener('click', (e) => {
     e.preventDefault();
-    scrollTo(link.getAttribute('href'));
+    scrollToSection(link.getAttribute('href'));
   });
 });
 
@@ -141,6 +144,7 @@ async function fetchFounders() {
     const res = await fetch(`${API}/founders?_t=${Date.now()}`, { credentials: 'include' });
     state.founders = await res.json();
     renderFounders(state.founders);
+    updateStats();
   } catch (err) {
     console.error('Error fetching founders:', err);
   }
@@ -478,9 +482,15 @@ setInterval(updateLiveClock, 1000);
 updateLiveClock();
 
 function updateStats() {
-  document.getElementById('statMembers').innerText = state.members.length;
-  document.getElementById('statAchievements').innerText = state.achievements.length;
-  document.getElementById('statEvents').innerText = state.events.length;
+  const memEl = document.getElementById('statMembers');
+  const fndEl = document.getElementById('statFounders');
+  const achEl = document.getElementById('statAchievements');
+  const evEl = document.getElementById('statEvents');
+  
+  if (memEl) memEl.innerText = state.members ? state.members.length : 0;
+  if (fndEl) fndEl.innerText = state.founders ? state.founders.length : 0;
+  if (achEl) achEl.innerText = state.achievements ? state.achievements.length : 0;
+  if (evEl) evEl.innerText = state.events ? state.events.length : 0;
 }
 
 function formatDate(dateStr) {
@@ -809,7 +819,7 @@ async function deleteItem(type, id) {
       
       // Refresh data
       if (type === 'members') { await fetchMembers(); updateStats(); }
-      if (type === 'founders') await fetchFounders();
+      if (type === 'founders') { await fetchFounders(); updateStats(); }
       if (type === 'achievements') { await fetchAchievements(); updateStats(); }
       if (type === 'events') { await fetchEvents(); updateStats(); }
       if (type === 'feedback') await fetchFeedback();
@@ -849,7 +859,7 @@ async function clearAllItems(type) {
       
       // Refresh data
       if (type === 'members') { await fetchMembers(); updateStats(); }
-      if (type === 'founders') await fetchFounders();
+      if (type === 'founders') { await fetchFounders(); updateStats(); }
       if (type === 'achievements') { await fetchAchievements(); updateStats(); }
       if (type === 'events') { await fetchEvents(); updateStats(); }
       if (type === 'feedback') await fetchFeedback();
@@ -975,7 +985,7 @@ async function handleFormSubmit(e, type) {
       
       // Refresh data
       if (type === 'members') { await fetchMembers(); updateStats(); }
-      if (type === 'founders') await fetchFounders();
+      if (type === 'founders') { await fetchFounders(); updateStats(); }
       if (type === 'achievements') { await fetchAchievements(); updateStats(); }
       if (type === 'events') { await fetchEvents(); updateStats(); }
       

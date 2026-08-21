@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=2026.5" />
+  <link rel="stylesheet" href="style.css?v=2026.6" />
 </head>
 <body>
   <audio id="bgMusic" loop>
@@ -60,21 +60,21 @@
       </h1>
       <p class="hero-desc">The cultural heartbeat of KITS — nurturing classical arts, dance, music, drama, and literature for over a decade.</p>
       <div class="hero-btns">
-        <button class="btn-primary" onclick="scrollTo('#achievements')">Achievements</button>
-        <button class="btn-primary" onclick="scrollTo('#events')">Events Calendar</button>
-        <button class="btn-outline" onclick="scrollTo('#about')">Discover More</button>
+        <button class="btn-primary" onclick="scrollToSection('#achievements')">Achievements</button>
+        <button class="btn-primary" onclick="scrollToSection('#events')">Events Calendar</button>
+        <button class="btn-outline" onclick="scrollToSection('#about')">Discover More</button>
       </div>
       <div class="hero-stats">
         <div class="stat"><span class="stat-num" id="statMembers">0</span><span class="stat-label">Members</span></div>
         <div class="stat-divider"></div>
-        <div class="stat"><span class="stat-num">16+</span><span class="stat-label">Years</span></div>
+        <div class="stat"><span class="stat-num" id="statFounders">0</span><span class="stat-label">Founders</span></div>
         <div class="stat-divider"></div>
         <div class="stat"><span class="stat-num" id="statAchievements">0</span><span class="stat-label">Awards</span></div>
         <div class="stat-divider"></div>
         <div class="stat"><span class="stat-num" id="statEvents">0</span><span class="stat-label">Events</span></div>
       </div>
     </div>
-    <div class="hero-scroll-hint">
+    <div class="hero-scroll-hint" onclick="scrollToSection('#about')" style="cursor: pointer;">
       <span>Scroll to explore</span>
       <div class="scroll-arrow"></div>
     </div>
@@ -396,6 +396,6 @@
   <!-- TOAST -->
   <div class="toast" id="toast"></div>
 
-  <script src="app.js?v=2026.5"></script>
+  <script src="app.js?v=2026.6"></script>
 </body>
 </html>
