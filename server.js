@@ -49,6 +49,14 @@ app.use(session({
   }
 }));
 
+// Disable caching on all API endpoints so updates reflect immediately
+app.use('/api', (req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  next();
+});
+
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/members', require('./routes/members'));

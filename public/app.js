@@ -127,7 +127,7 @@ function setupIntersectionObservers() {
 /* --- API CALLS --- */
 async function fetchFounders() {
   try {
-    const res = await fetch(`${API}/founders`, { credentials: 'include' });
+    const res = await fetch(`${API}/founders?_t=${Date.now()}`, { credentials: 'include' });
     state.founders = await res.json();
     renderFounders(state.founders);
   } catch (err) {
@@ -137,7 +137,7 @@ async function fetchFounders() {
 
 async function fetchMembers() {
   try {
-    const res = await fetch(`${API}/members`, { credentials: 'include' });
+    const res = await fetch(`${API}/members?_t=${Date.now()}`, { credentials: 'include' });
     state.members = await res.json();
     filterMembers(currentMemberFilter);
   } catch (err) {
@@ -147,7 +147,7 @@ async function fetchMembers() {
 
 async function fetchAchievements() {
   try {
-    const res = await fetch(`${API}/achievements`, { credentials: 'include' });
+    const res = await fetch(`${API}/achievements?_t=${Date.now()}`, { credentials: 'include' });
     state.achievements = await res.json();
     filterAchievements(currentAchievementFilter);
   } catch (err) {
@@ -157,7 +157,7 @@ async function fetchAchievements() {
 
 async function fetchEvents() {
   try {
-    const res = await fetch(`${API}/events`, { credentials: 'include' });
+    const res = await fetch(`${API}/events?_t=${Date.now()}`, { credentials: 'include' });
     state.events = await res.json();
     renderCalendar();
   } catch (err) {
@@ -167,7 +167,7 @@ async function fetchEvents() {
 
 async function fetchContact() {
   try {
-    const res = await fetch(`${API}/contact`, { credentials: 'include' });
+    const res = await fetch(`${API}/contact?_t=${Date.now()}`, { credentials: 'include' });
     state.contact = await res.json();
     renderContact();
   } catch (err) {
@@ -190,7 +190,7 @@ function renderContact() {
 async function fetchFeedback() {
   if (!state.isAdmin) return;
   try {
-    const res = await fetch(`${API}/feedback`, { credentials: 'include' });
+    const res = await fetch(`${API}/feedback?_t=${Date.now()}`, { credentials: 'include' });
     state.feedback = await res.json();
   } catch (err) {
     console.error('Error fetching feedback:', err);
