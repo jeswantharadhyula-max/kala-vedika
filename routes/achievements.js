@@ -57,11 +57,33 @@ router.put('/:id', requireAdmin, upload.single('photo'), async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+const mongoose = require('mongoose');
+
+router.delete('/all', requireAdmin, async (req, res) => {
+  try {
+    const achievements = await Achievement.find({});
+    for (const a of achievements) {
+      if (a.photo) {
+        const old = path.join(__dirname, '../public', a.photo);
+        if (fs.existsSync(old)) try { fs.unlinkSync(old); } catch (_) {}
+      }
+    }
+    await Achievement.deleteMany({});
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 router.delete('/:id', requireAdmin, async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid ID format' });
+    }
     const achievement = await Achievement.findById(req.params.id);
     if (!achievement) return res.status(404).json({ error: 'Achievement not found' });
-    if (achievement.photo) { const old = path.join(__dirname, '../public', achievement.photo); if (fs.existsSync(old)) fs.unlinkSync(old); }
+    if (achievement.photo) {
+      const old = path.join(__dirname, '../public', achievement.photo);
+      if (fs.existsSync(old)) try { fs.unlinkSync(old); } catch (_) {}
+    }
     await Achievement.findByIdAndDelete(req.params.id);
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }

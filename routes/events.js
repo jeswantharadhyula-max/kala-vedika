@@ -62,11 +62,33 @@ router.put('/:id', requireAdmin, upload.single('photo'), async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+const mongoose = require('mongoose');
+
+router.delete('/all', requireAdmin, async (req, res) => {
+  try {
+    const events = await Event.find({});
+    for (const ev of events) {
+      if (ev.photo) {
+        const old = path.join(__dirname, '../public', ev.photo);
+        if (fs.existsSync(old)) try { fs.unlinkSync(old); } catch (_) {}
+      }
+    }
+    await Event.deleteMany({});
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 router.delete('/:id', requireAdmin, async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid ID format' });
+    }
     const event = await Event.findById(req.params.id);
     if (!event) return res.status(404).json({ error: 'Event not found' });
-    if (event.photo) { const old = path.join(__dirname, '../public', event.photo); if (fs.existsSync(old)) fs.unlinkSync(old); }
+    if (event.photo) {
+      const old = path.join(__dirname, '../public', event.photo);
+      if (fs.existsSync(old)) try { fs.unlinkSync(old); } catch (_) {}
+    }
     await Event.findByIdAndDelete(req.params.id);
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }

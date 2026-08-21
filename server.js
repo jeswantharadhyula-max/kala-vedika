@@ -1,3 +1,5 @@
+const dns = require('dns');
+dns.setServers(['8.8.8.8', '1.1.1.1']);
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
@@ -61,13 +63,9 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Seed admin users & clean all default sample data
+// Seed admin users if not existing
 async function seedData() {
   const Admin = require('./models/Admin');
-  const Member = require('./models/Member');
-  const Founder = require('./models/Founder');
-  const Achievement = require('./models/Achievement');
-  const Event = require('./models/Event');
 
   // Seed admins
   const admins = ['admin1@kits', 'admin2@kits', 'admin3@kits'];
@@ -79,13 +77,6 @@ async function seedData() {
       console.log(`Admin created: ${email}`);
     }
   }
-
-  // Clear default sample data so all sections are completely clean and empty as requested
-  await Member.deleteMany({});
-  await Founder.deleteMany({});
-  await Achievement.deleteMany({});
-  await Event.deleteMany({});
-  console.log('All default members, founders, achievements, and events wiped. Ready for admin to add/manage.');
 }
 
 // Connect to MongoDB and start server

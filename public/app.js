@@ -24,6 +24,9 @@ let state = {
   adminEmail: null
 };
 
+let currentMemberFilter = 'all';
+let currentAchievementFilter = 'all';
+
 // Elements
 const navbar = document.getElementById('navbar');
 const navLinks = document.getElementById('navLinks');
@@ -124,7 +127,7 @@ function setupIntersectionObservers() {
 /* --- API CALLS --- */
 async function fetchFounders() {
   try {
-    const res = await fetch(`${API}/founders`);
+    const res = await fetch(`${API}/founders`, { credentials: 'include' });
     state.founders = await res.json();
     renderFounders(state.founders);
   } catch (err) {
@@ -134,9 +137,9 @@ async function fetchFounders() {
 
 async function fetchMembers() {
   try {
-    const res = await fetch(`${API}/members`);
+    const res = await fetch(`${API}/members`, { credentials: 'include' });
     state.members = await res.json();
-    filterMembers('all'); // Renders all initially
+    filterMembers(currentMemberFilter);
   } catch (err) {
     console.error('Error fetching members:', err);
   }
@@ -144,9 +147,9 @@ async function fetchMembers() {
 
 async function fetchAchievements() {
   try {
-    const res = await fetch(`${API}/achievements`);
+    const res = await fetch(`${API}/achievements`, { credentials: 'include' });
     state.achievements = await res.json();
-    filterAchievements('all');
+    filterAchievements(currentAchievementFilter);
   } catch (err) {
     console.error('Error fetching achievements:', err);
   }
@@ -154,7 +157,7 @@ async function fetchAchievements() {
 
 async function fetchEvents() {
   try {
-    const res = await fetch(`${API}/events`);
+    const res = await fetch(`${API}/events`, { credentials: 'include' });
     state.events = await res.json();
     renderCalendar();
   } catch (err) {
@@ -164,7 +167,7 @@ async function fetchEvents() {
 
 async function fetchContact() {
   try {
-    const res = await fetch(`${API}/contact`);
+    const res = await fetch(`${API}/contact`, { credentials: 'include' });
     state.contact = await res.json();
     renderContact();
   } catch (err) {
@@ -178,7 +181,6 @@ function renderContact() {
   const phone = document.getElementById('contact-phone-display');
   const hours = document.getElementById('contact-hours-display');
   
-  // Use sanitized HTML to prevent XSS from contact info fields
   if (loc && state.contact.location) loc.innerHTML = sanitizeText(state.contact.location).replace(/\n/g, '<br>');
   if (email && state.contact.email) email.innerHTML = sanitizeText(state.contact.email).replace(/\n/g, '<br>');
   if (phone && state.contact.phone) phone.innerHTML = sanitizeText(state.contact.phone).replace(/\n/g, '<br>');
@@ -188,11 +190,18 @@ function renderContact() {
 async function fetchFeedback() {
   if (!state.isAdmin) return;
   try {
-    const res = await fetch(`${API}/feedback`);
+    const res = await fetch(`${API}/feedback`, { credentials: 'include' });
     state.feedback = await res.json();
   } catch (err) {
     console.error('Error fetching feedback:', err);
   }
+}
+
+function renderAllPublicSections() {
+  renderFounders(state.founders);
+  filterMembers(currentMemberFilter);
+  filterAchievements(currentAchievementFilter);
+  renderCalendar();
 }
 
 /* --- RENDER FUNCTIONS --- */
@@ -204,7 +213,10 @@ function renderFounders(data) {
   }
   
   container.innerHTML = data.map(f => `
-    <div class="founder-card reveal">
+    <div class="founder-card reveal" style="position:relative;">
+      ${state.isAdmin ? `
+        <button class="card-admin-del" onclick="event.stopPropagation(); deleteItem('founders', '${f._id}')" title="Delete Founder">🗑️</button>
+      ` : ''}
       <div class="founder-photo">
         ${f.photo ? `<img src="${sanitizeText(f.photo)}" alt="${sanitizeText(f.name)}" loading="lazy">` : `<div class="founder-photo-placeholder">👤</div>`}
         <div class="founder-order-badge">${sanitizeText(String(f.display_order))}</div>
@@ -219,23 +231,23 @@ function renderFounders(data) {
     </div>
   `).join('');
   
-  // Re-observe newly added elements
   setupIntersectionObservers();
 }
 
 function filterMembers(roleFilter) {
-  // Update buttons
+  currentMemberFilter = roleFilter || 'all';
+  
   document.querySelectorAll('#membersFilter .filter-btn').forEach(btn => {
     btn.classList.remove('active');
-    if (btn.getAttribute('onclick').includes(`'${roleFilter}'`)) btn.classList.add('active');
+    if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(`'${currentMemberFilter}'`)) btn.classList.add('active');
   });
 
   let filtered = state.members;
-  if (roleFilter !== 'all') {
-    if (roleFilter === 'Event Coordinator') {
-      filtered = state.members.filter(m => m.role.toLowerCase().includes('coordinator'));
+  if (currentMemberFilter !== 'all') {
+    if (currentMemberFilter === 'Event Coordinator') {
+      filtered = state.members.filter(m => m.role && m.role.toLowerCase().includes('coordinator'));
     } else {
-      filtered = state.members.filter(m => m.role === roleFilter);
+      filtered = state.members.filter(m => m.role === currentMemberFilter);
     }
   }
 
@@ -246,7 +258,10 @@ function filterMembers(roleFilter) {
   }
 
   container.innerHTML = filtered.map(m => `
-    <div class="member-card reveal" onclick="showMemberDetails('${m._id}')">
+    <div class="member-card reveal" style="position:relative;" onclick="showMemberDetails('${m._id}')">
+      ${state.isAdmin ? `
+        <button class="card-admin-del" onclick="event.stopPropagation(); deleteItem('members', '${m._id}')" title="Delete Member">🗑️</button>
+      ` : ''}
       <div class="member-avatar">
         ${m.photo ? `<img src="${sanitizeText(m.photo)}" alt="${sanitizeText(m.name)}" loading="lazy">` : `<span>${sanitizeText(m.name.charAt(0))}</span>`}
       </div>
@@ -274,20 +289,27 @@ function showMemberDetails(id) {
       <div style="color:var(--text-muted); font-weight:600; letter-spacing:0.1em; text-transform:uppercase; font-size:0.8rem; margin-bottom:1rem;">${sanitizeText(member.role)}</div>
       <div style="display:inline-block; border:1px solid rgba(212,168,67,0.3); padding:0.3rem 1rem; border-radius:50px; font-size:0.8rem; margin-bottom:1.5rem;">Year ${sanitizeText(String(member.year || '?'))} • ${sanitizeText(member.department)} • Sec ${sanitizeText(member.section)} • ${sanitizeText(member.roll_no || 'N/A')} • ${sanitizeText(member.gen || 'Gen X')}</div>
       ${member.bio ? `<p style="color:var(--text-muted); font-size:0.95rem; line-height:1.6; text-align:left; background:var(--surface); padding:1.5rem; border-radius:var(--radius-sm); border:1px solid var(--border);">${sanitizeText(member.bio)}</p>` : ''}
+      ${state.isAdmin ? `
+        <button class="btn-danger" style="margin-top:1.5rem; width:100%; display:flex; align-items:center; justify-content:center; gap:0.5rem; padding:0.75rem 1rem; font-size:0.9rem;" onclick="deleteItem('members', '${member._id}')">
+          🗑️ Delete Member
+        </button>
+      ` : ''}
     </div>
   `;
   itemModal.classList.add('open');
 }
 
 function filterAchievements(category) {
+  currentAchievementFilter = category || 'all';
+  
   document.querySelectorAll('.achievements-filter .filter-btn').forEach(btn => {
     btn.classList.remove('active');
-    if (btn.getAttribute('onclick').includes(`'${category}'`)) btn.classList.add('active');
+    if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(`'${currentAchievementFilter}'`)) btn.classList.add('active');
   });
 
   let filtered = state.achievements;
-  if (category !== 'all') {
-    filtered = state.achievements.filter(a => a.category === category);
+  if (currentAchievementFilter !== 'all') {
+    filtered = state.achievements.filter(a => a.category === currentAchievementFilter);
   }
 
   const container = document.getElementById('achievementsGrid');
@@ -297,7 +319,10 @@ function filterAchievements(category) {
   }
 
   container.innerHTML = filtered.map(a => `
-    <div class="achievement-card reveal">
+    <div class="achievement-card reveal" style="position:relative;">
+      ${state.isAdmin ? `
+        <button class="card-admin-del" onclick="event.stopPropagation(); deleteItem('achievements', '${a._id}')" title="Delete Achievement">🗑️</button>
+      ` : ''}
       ${a.photo ? `<img src="${sanitizeText(a.photo)}" style="width:100%; height:160px; object-fit:cover; border-radius:8px; margin-bottom:1rem;">` : `<div class="achievement-icon">🏆</div>`}
       <div class="achievement-category">${sanitizeText(a.category)}</div>
       <h3 class="achievement-title">${sanitizeText(a.title)}</h3>
@@ -327,19 +352,16 @@ function renderCalendar() {
   
   let html = '';
   
-  // Empty slots for first week
   for (let i = 0; i < firstDay; i++) {
     html += `<div class="calendar-day empty"></div>`;
   }
   
   const today = new Date();
   
-  // Days
   for (let d = 1; d <= daysInMonth; d++) {
     const isToday = today.getDate() === d && today.getMonth() === month && today.getFullYear() === year;
     const cellDateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
     
-    // Find events for this day
     const dayEvents = state.events.filter(e => e.event_date === cellDateStr);
     
     html += `
@@ -382,6 +404,11 @@ function showEventDetails(id) {
         <span>📅 ${sanitizeText(formatDate(e.event_date))}</span> | <span>🕐 ${sanitizeText(e.event_time)}</span> | <span>📍 ${sanitizeText(e.venue)}</span>
       </div>
       <p style="color:var(--text-muted); font-size:1rem; line-height:1.6; text-align:left; background:var(--surface); padding:1.5rem; border-radius:var(--radius-sm); border:1px solid var(--border);">${sanitizeText(e.description)}</p>
+      ${state.isAdmin ? `
+        <button class="btn-danger" style="margin-top:1.5rem; width:100%; display:flex; align-items:center; justify-content:center; gap:0.5rem; padding:0.75rem 1rem; font-size:0.9rem;" onclick="deleteItem('events', '${e._id}')">
+          🗑️ Delete Event
+        </button>
+      ` : ''}
     </div>
   `;
   itemModal.classList.add('open');
@@ -452,9 +479,9 @@ function formatDate(dateStr) {
 /* --- ADMIN AUTH --- */
 async function checkAuthStatus() {
   try {
-    const res = await fetch(`${API}/auth/me`);
+    const res = await fetch(`${API}/auth/me`, { credentials: 'include' });
     const data = await res.json();
-    state.isAdmin = data.loggedIn;
+    state.isAdmin = !!data.loggedIn;
     if (state.isAdmin) {
       state.adminEmail = data.email;
       adminBtn.innerText = 'Dashboard';
@@ -497,7 +524,8 @@ async function handleLogin(e) {
     const res = await fetch(`${API}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ email, password }),
+      credentials: 'include'
     });
     
     const data = await res.json();
@@ -508,6 +536,7 @@ async function handleLogin(e) {
       adminBtn.innerText = 'Dashboard';
       showToast('Logged in successfully', 'success');
       closeAdminModal();
+      renderAllPublicSections();
       openDashboard();
     } else {
       errorEl.innerText = data.error || 'Login failed';
@@ -522,11 +551,12 @@ async function handleLogin(e) {
 
 async function handleLogout() {
   try {
-    await fetch(`${API}/auth/logout`, { method: 'POST' });
+    await fetch(`${API}/auth/logout`, { method: 'POST', credentials: 'include' });
     state.isAdmin = false;
     state.adminEmail = null;
     adminBtn.innerText = 'Admin Login';
     closeDashboard();
+    renderAllPublicSections();
     showToast('Logged out successfully', 'success');
   } catch (err) {
     console.error('Logout failed', err);
@@ -552,7 +582,7 @@ function switchTab(tab) {
   currentAdminTab = tab;
   document.querySelectorAll('.dashboard-tabs .tab-btn').forEach(btn => {
     btn.classList.remove('active');
-    if (btn.getAttribute('onclick').includes(`'${tab}'`)) btn.classList.add('active');
+    if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(`'${tab}'`)) btn.classList.add('active');
   });
   renderDashboardContent();
 }
@@ -563,7 +593,10 @@ function renderDashboardContent() {
   let headerHtml = `
     <div class="admin-section-header">
       <h3>Manage ${currentAdminTab.charAt(0).toUpperCase() + currentAdminTab.slice(1)}</h3>
-      ${currentAdminTab !== 'feedback' ? `<button class="btn-success" onclick="openCreateModal('${currentAdminTab}')">+ Add New</button>` : ''}
+      <div style="display:flex; gap:0.6rem; align-items:center;">
+        ${currentAdminTab !== 'feedback' && currentAdminTab !== 'contact' ? `<button class="btn-success" onclick="openCreateModal('${currentAdminTab}')">+ Add New</button>` : ''}
+        ${currentAdminTab !== 'contact' ? `<button class="btn-danger" onclick="clearAllItems('${currentAdminTab}')">🗑️ Clear All</button>` : ''}
+      </div>
     </div>
   `;
   
@@ -574,13 +607,14 @@ function renderDashboardContent() {
       <table class="admin-table">
         <thead><tr><th>Name</th><th>Dept</th><th>Role</th><th>Actions</th></tr></thead>
         <tbody>
+          ${state.members.length === 0 ? '<tr><td colspan="4" style="text-align:center; padding:2rem; color:var(--text-muted);">No members found.</td></tr>' : ''}
           ${state.members.map(m => `
             <tr>
               <td><strong>${sanitizeText(m.name)}</strong></td>
               <td>${sanitizeText(m.department)} (${sanitizeText(m.section)})</td>
               <td>${sanitizeText(m.role)}</td>
               <td class="actions">
-                <button class="btn-icon btn-del" onclick="deleteItem('members', '${m._id}')">🗑️</button>
+                <button class="btn-icon btn-del" onclick="deleteItem('members', '${m._id}')" title="Delete">🗑️ Delete</button>
               </td>
             </tr>
           `).join('')}
@@ -592,13 +626,14 @@ function renderDashboardContent() {
       <table class="admin-table">
         <thead><tr><th>Order</th><th>Name</th><th>Designation</th><th>Actions</th></tr></thead>
         <tbody>
+          ${state.founders.length === 0 ? '<tr><td colspan="4" style="text-align:center; padding:2rem; color:var(--text-muted);">No founders found.</td></tr>' : ''}
           ${state.founders.map(f => `
             <tr>
               <td>${sanitizeText(String(f.display_order))}</td>
               <td><strong>${sanitizeText(f.name)}</strong></td>
               <td>${sanitizeText(f.designation)}</td>
               <td class="actions">
-                <button class="btn-icon btn-del" onclick="deleteItem('founders', '${f._id}')">🗑️</button>
+                <button class="btn-icon btn-del" onclick="deleteItem('founders', '${f._id}')" title="Delete">🗑️ Delete</button>
               </td>
             </tr>
           `).join('')}
@@ -610,13 +645,14 @@ function renderDashboardContent() {
       <table class="admin-table">
         <thead><tr><th>Title</th><th>Category</th><th>Date</th><th>Actions</th></tr></thead>
         <tbody>
+          ${state.achievements.length === 0 ? '<tr><td colspan="4" style="text-align:center; padding:2rem; color:var(--text-muted);">No achievements found.</td></tr>' : ''}
           ${state.achievements.map(a => `
             <tr>
               <td><strong>${sanitizeText(a.title)}</strong></td>
               <td>${sanitizeText(a.category)}</td>
               <td>${sanitizeText(a.date)}</td>
               <td class="actions">
-                <button class="btn-icon btn-del" onclick="deleteItem('achievements', '${a._id}')">🗑️</button>
+                <button class="btn-icon btn-del" onclick="deleteItem('achievements', '${a._id}')" title="Delete">🗑️ Delete</button>
               </td>
             </tr>
           `).join('')}
@@ -628,13 +664,14 @@ function renderDashboardContent() {
       <table class="admin-table">
         <thead><tr><th>Title</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
         <tbody>
+          ${state.events.length === 0 ? '<tr><td colspan="4" style="text-align:center; padding:2rem; color:var(--text-muted);">No events found.</td></tr>' : ''}
           ${state.events.map(e => `
             <tr>
               <td><strong>${sanitizeText(e.title)}</strong></td>
               <td>${sanitizeText(e.event_date)}</td>
               <td><span class="event-status ${sanitizeText(e.status)}">${sanitizeText(e.status)}</span></td>
               <td class="actions">
-                <button class="btn-icon btn-del" onclick="deleteItem('events', '${e._id}')">🗑️</button>
+                <button class="btn-icon btn-del" onclick="deleteItem('events', '${e._id}')" title="Delete">🗑️ Delete</button>
               </td>
             </tr>
           `).join('')}
@@ -644,7 +681,7 @@ function renderDashboardContent() {
   } else if (currentAdminTab === 'feedback') {
     tableHtml = `
       <div style="display:flex; flex-direction:column; gap:1rem;">
-        ${state.feedback.length === 0 ? '<p>No feedback received yet.</p>' : ''}
+        ${state.feedback.length === 0 ? '<p style="color:var(--text-muted); text-align:center; padding:2rem;">No feedback received yet.</p>' : ''}
         ${state.feedback.map(f => `
           <div style="background:var(--surface); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--border);">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.5rem;">
@@ -652,7 +689,7 @@ function renderDashboardContent() {
                 <strong>${sanitizeText(f.name)}</strong> &lt;${sanitizeText(f.email)}&gt;
                 <div style="font-size:0.8rem; color:var(--text-muted);">${sanitizeText(formatDate(f.created_at))}</div>
               </div>
-              <button class="btn-icon btn-del" onclick="deleteItem('feedback', '${f._id}')">🗑️</button>
+              <button class="btn-icon btn-del" onclick="deleteItem('feedback', '${f._id}')" title="Delete">🗑️ Delete</button>
             </div>
             <p style="color:var(--text-light);">${sanitizeText(f.message)}</p>
           </div>
@@ -708,12 +745,13 @@ async function updateContactInfo(e) {
     const res = await fetch(`${API}/contact`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
+      credentials: 'include'
     });
     
     if (res.ok) {
       showToast('Contact info updated successfully', 'success');
-      await fetchContact(); // Refresh state and UI
+      await fetchContact();
     } else {
       showToast('Failed to update contact info', 'error');
     }
@@ -733,9 +771,15 @@ async function deleteItem(type, id) {
   if (!confirm(`Are you sure you want to delete this item?`)) return;
   
   try {
-    const res = await fetch(`${API}/${type}/${id}`, { method: 'DELETE' });
+    const res = await fetch(`${API}/${type}/${id}`, {
+      method: 'DELETE',
+      credentials: 'include'
+    });
+    
     if (res.ok) {
       showToast('Item deleted successfully', 'success');
+      closeItemModal();
+      
       // Refresh data
       if (type === 'members') { await fetchMembers(); updateStats(); }
       if (type === 'founders') await fetchFounders();
@@ -745,15 +789,54 @@ async function deleteItem(type, id) {
       
       if (dashboardModal.classList.contains('open')) renderDashboardContent();
     } else if (res.status === 401) {
-      // Session expired (e.g. server restarted) — reset admin state
       state.isAdmin = false;
       state.adminEmail = null;
       adminBtn.innerText = 'Admin Login';
       dashboardModal.classList.remove('open');
+      closeItemModal();
+      renderAllPublicSections();
       showToast('Session expired. Please log in again.', 'error');
     } else {
       const data = await res.json().catch(() => ({}));
       showToast(data.error || 'Failed to delete', 'error');
+    }
+  } catch (err) {
+    showToast('Network error — please try again', 'error');
+  }
+}
+
+async function clearAllItems(type) {
+  if (!confirm(`Are you sure you want to delete ALL ${type}? This cannot be undone.`)) return;
+  
+  try {
+    const res = await fetch(`${API}/${type}/all`, {
+      method: 'DELETE',
+      credentials: 'include'
+    });
+    
+    if (res.ok) {
+      showToast(`All ${type} deleted successfully`, 'success');
+      closeItemModal();
+      
+      // Refresh data
+      if (type === 'members') { await fetchMembers(); updateStats(); }
+      if (type === 'founders') await fetchFounders();
+      if (type === 'achievements') { await fetchAchievements(); updateStats(); }
+      if (type === 'events') { await fetchEvents(); updateStats(); }
+      if (type === 'feedback') await fetchFeedback();
+      
+      if (dashboardModal.classList.contains('open')) renderDashboardContent();
+    } else if (res.status === 401) {
+      state.isAdmin = false;
+      state.adminEmail = null;
+      adminBtn.innerText = 'Admin Login';
+      dashboardModal.classList.remove('open');
+      closeItemModal();
+      renderAllPublicSections();
+      showToast('Session expired. Please log in again.', 'error');
+    } else {
+      const data = await res.json().catch(() => ({}));
+      showToast(data.error || 'Failed to clear items', 'error');
     }
   } catch (err) {
     showToast('Network error — please try again', 'error');
@@ -851,7 +934,8 @@ async function handleFormSubmit(e, type) {
   try {
     const res = await fetch(`${API}/${type}`, {
       method: 'POST',
-      body: formData
+      body: formData,
+      credentials: 'include'
     });
     
     if (res.ok) {
@@ -871,6 +955,7 @@ async function handleFormSubmit(e, type) {
       adminBtn.innerText = 'Admin Login';
       dashboardModal.classList.remove('open');
       closeItemModal();
+      renderAllPublicSections();
       showToast('Session expired. Please log in again.', 'error');
     } else {
       const data = await res.json().catch(() => ({}));
@@ -914,7 +999,8 @@ async function submitFeedbackForm(e) {
     const res = await fetch(`${API}/feedback`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
+      credentials: 'include'
     });
     
     if (res.ok) {

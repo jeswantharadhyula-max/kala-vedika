@@ -69,11 +69,33 @@ router.put('/:id', requireAdmin, upload.single('photo'), async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+const mongoose = require('mongoose');
+
+router.delete('/all', requireAdmin, async (req, res) => {
+  try {
+    const members = await Member.find({});
+    for (const m of members) {
+      if (m.photo) {
+        const old = path.join(__dirname, '../public', m.photo);
+        if (fs.existsSync(old)) try { fs.unlinkSync(old); } catch (_) {}
+      }
+    }
+    await Member.deleteMany({});
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 router.delete('/:id', requireAdmin, async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid ID format' });
+    }
     const member = await Member.findById(req.params.id);
     if (!member) return res.status(404).json({ error: 'Member not found' });
-    if (member.photo) { const old = path.join(__dirname, '../public', member.photo); if (fs.existsSync(old)) fs.unlinkSync(old); }
+    if (member.photo) {
+      const old = path.join(__dirname, '../public', member.photo);
+      if (fs.existsSync(old)) try { fs.unlinkSync(old); } catch (_) {}
+    }
     await Member.findByIdAndDelete(req.params.id);
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
