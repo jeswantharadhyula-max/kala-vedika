@@ -40,6 +40,17 @@ const toastEl = document.getElementById('toast');
 // API Base
 const API = '/api';
 
+/* --- AUTH HELPERS --- */
+function getAuthHeaders(additionalHeaders = {}) {
+  const token = localStorage.getItem('kv_admin_token');
+  const headers = { ...additionalHeaders };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+    headers['x-admin-token'] = token;
+  }
+  return headers;
+}
+
 /* --- INIT --- */
 document.addEventListener('DOMContentLoaded', async () => {
   setupScrollEffects();
@@ -190,7 +201,10 @@ function renderContact() {
 async function fetchFeedback() {
   if (!state.isAdmin) return;
   try {
-    const res = await fetch(`${API}/feedback?_t=${Date.now()}`, { credentials: 'include' });
+    const res = await fetch(`${API}/feedback?_t=${Date.now()}`, {
+      headers: getAuthHeaders(),
+      credentials: 'include'
+    });
     state.feedback = await res.json();
   } catch (err) {
     console.error('Error fetching feedback:', err);
@@ -479,13 +493,17 @@ function formatDate(dateStr) {
 /* --- ADMIN AUTH --- */
 async function checkAuthStatus() {
   try {
-    const res = await fetch(`${API}/auth/me`, { credentials: 'include' });
+    const res = await fetch(`${API}/auth/me?_t=${Date.now()}`, {
+      headers: getAuthHeaders(),
+      credentials: 'include'
+    });
     const data = await res.json();
     state.isAdmin = !!data.loggedIn;
     if (state.isAdmin) {
       state.adminEmail = data.email;
       adminBtn.innerText = 'Dashboard';
     } else {
+      localStorage.removeItem('kv_admin_token');
       adminBtn.innerText = 'Admin Login';
     }
   } catch (err) {
@@ -531,6 +549,9 @@ async function handleLogin(e) {
     const data = await res.json();
     
     if (res.ok && data.success) {
+      if (data.token) {
+        localStorage.setItem('kv_admin_token', data.token);
+      }
       state.isAdmin = true;
       state.adminEmail = data.email;
       adminBtn.innerText = 'Dashboard';
@@ -551,16 +572,21 @@ async function handleLogin(e) {
 
 async function handleLogout() {
   try {
-    await fetch(`${API}/auth/logout`, { method: 'POST', credentials: 'include' });
-    state.isAdmin = false;
-    state.adminEmail = null;
-    adminBtn.innerText = 'Admin Login';
-    closeDashboard();
-    renderAllPublicSections();
-    showToast('Logged out successfully', 'success');
+    await fetch(`${API}/auth/logout`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      credentials: 'include'
+    });
   } catch (err) {
     console.error('Logout failed', err);
   }
+  localStorage.removeItem('kv_admin_token');
+  state.isAdmin = false;
+  state.adminEmail = null;
+  adminBtn.innerText = 'Admin Login';
+  closeDashboard();
+  renderAllPublicSections();
+  showToast('Logged out successfully', 'success');
 }
 
 /* --- ADMIN DASHBOARD --- */
@@ -744,7 +770,7 @@ async function updateContactInfo(e) {
   try {
     const res = await fetch(`${API}/contact`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(data),
       credentials: 'include'
     });
@@ -773,6 +799,7 @@ async function deleteItem(type, id) {
   try {
     const res = await fetch(`${API}/${type}/${id}`, {
       method: 'DELETE',
+      headers: getAuthHeaders(),
       credentials: 'include'
     });
     
@@ -789,6 +816,7 @@ async function deleteItem(type, id) {
       
       if (dashboardModal.classList.contains('open')) renderDashboardContent();
     } else if (res.status === 401) {
+      localStorage.removeItem('kv_admin_token');
       state.isAdmin = false;
       state.adminEmail = null;
       adminBtn.innerText = 'Admin Login';
@@ -811,6 +839,7 @@ async function clearAllItems(type) {
   try {
     const res = await fetch(`${API}/${type}/all`, {
       method: 'DELETE',
+      headers: getAuthHeaders(),
       credentials: 'include'
     });
     
@@ -827,6 +856,7 @@ async function clearAllItems(type) {
       
       if (dashboardModal.classList.contains('open')) renderDashboardContent();
     } else if (res.status === 401) {
+      localStorage.removeItem('kv_admin_token');
       state.isAdmin = false;
       state.adminEmail = null;
       adminBtn.innerText = 'Admin Login';
@@ -934,6 +964,7 @@ async function handleFormSubmit(e, type) {
   try {
     const res = await fetch(`${API}/${type}`, {
       method: 'POST',
+      headers: getAuthHeaders(),
       body: formData,
       credentials: 'include'
     });
@@ -950,13 +981,14 @@ async function handleFormSubmit(e, type) {
       
       if (dashboardModal.classList.contains('open')) renderDashboardContent();
     } else if (res.status === 401) {
+      localStorage.removeItem('kv_admin_token');
       state.isAdmin = false;
       state.adminEmail = null;
       adminBtn.innerText = 'Admin Login';
       dashboardModal.classList.remove('open');
       closeItemModal();
       renderAllPublicSections();
-      showToast('Session expired. Please log in again.', 'error');
+      showToast('Unauthorized: Please log in as Admin first.', 'error');
     } else {
       const data = await res.json().catch(() => ({}));
       showToast(data.error || 'Failed to save', 'error');
