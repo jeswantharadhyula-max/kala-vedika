@@ -3,32 +3,59 @@
    Cultural Organization Website
    ===================================================== */
 
-/* === DESIGN TOKENS === */
-:root {
-  --gold: #ff7300;
-  --gold-light: #ffa65e;
-  --gold-dark: #cc5c00;
+/* === DESIGN TOKENS (DARK MODE DEFAULT) === */
+:root, [data-theme="dark"] {
+  --gold: #ff9433;
+  --gold-light: #ffb870;
+  --gold-dark: #d96e00;
   --crimson: #8b1a1a;
   --crimson-light: #c23b3b;
-  --deep-purple: #fff3e6;
-  --purple: #ffe6cc;
-  --purple-mid: #ffcc99;
-  --indigo: #ff9933;
-  --bg: #ffffff;
-  --bg2: #f8f9fa;
-  --bg3: #f1f3f5;
-  --surface: rgba(0,0,0,0.02);
-  --surface2: rgba(0,0,0,0.05);
-  --border: rgba(255, 115, 0, 0.2);
-  --border-hover: rgba(255, 115, 0, 0.5);
-  --text: #333333;
-  --text-muted: #555555;
-  --text-dim: #888888;
-  --shadow-gold: 0 0 40px rgba(255, 115, 0, 0.15);
-  --shadow-card: 0 8px 40px rgba(0,0,0,0.1);
+  --deep-purple: #0c0714;
+  --purple: #170c24;
+  --purple-mid: #25123a;
+  --indigo: #391b58;
+  --bg: #09050e;
+  --bg2: #120b1c;
+  --bg3: #1a1028;
+  --nav-bg: rgba(9, 5, 14, 0.92);
+  --surface: rgba(255, 255, 255, 0.04);
+  --surface2: rgba(255, 255, 255, 0.08);
+  --border: rgba(255, 148, 51, 0.22);
+  --border-hover: rgba(255, 148, 51, 0.55);
+  --text: #f5efe6;
+  --text-muted: #b8aba0;
+  --text-dim: #7a6e65;
+  --shadow-gold: 0 0 40px rgba(255, 148, 51, 0.2);
+  --shadow-card: 0 8px 40px rgba(0, 0, 0, 0.5);
   --radius: 16px;
   --radius-sm: 10px;
   --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* === LIGHT MODE (WHITE/CREAM THEME) === */
+[data-theme="light"] {
+  --gold: #d47a00;
+  --gold-light: #f59e0b;
+  --gold-dark: #b45309;
+  --crimson: #991b1b;
+  --crimson-light: #dc2626;
+  --deep-purple: #fff7ed;
+  --purple: #ffedd5;
+  --purple-mid: #fed7aa;
+  --indigo: #fdba74;
+  --bg: #fdfbf7;
+  --bg2: #ffffff;
+  --bg3: #f5efe6;
+  --nav-bg: rgba(253, 251, 247, 0.95);
+  --surface: rgba(0, 0, 0, 0.03);
+  --surface2: rgba(0, 0, 0, 0.06);
+  --border: rgba(212, 122, 0, 0.22);
+  --border-hover: rgba(212, 122, 0, 0.6);
+  --text: #1c1917;
+  --text-muted: #57534e;
+  --text-dim: #78716c;
+  --shadow-gold: 0 0 30px rgba(212, 122, 0, 0.15);
+  --shadow-card: 0 8px 30px rgba(0, 0, 0, 0.07);
 }
 
 .hero {
@@ -49,6 +76,7 @@ body {
   width: 100%;
   position: relative;
   line-height: 1.6;
+  transition: background-color var(--transition), color var(--transition);
 }
 img { max-width: 100%; display: block; }
 a { text-decoration: none; color: inherit; }
@@ -73,13 +101,35 @@ ul { list-style: none; }
   justify-content: space-between;
   padding: 1rem 2.5rem;
   backdrop-filter: blur(20px);
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--nav-bg);
   border-bottom: 1px solid var(--border);
-  transition: padding var(--transition), box-shadow var(--transition);
+  transition: padding var(--transition), box-shadow var(--transition), background var(--transition), border-color var(--transition);
 }
 .navbar.scrolled {
   padding: 0.6rem 2.5rem;
-  box-shadow: 0 4px 30px rgba(0,0,0,0.6);
+  box-shadow: 0 4px 30px rgba(0,0,0,0.15);
+}
+
+.theme-toggle-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--gold);
+  cursor: pointer;
+  transition: all var(--transition);
+  user-select: none;
+}
+.theme-toggle-btn:hover {
+  border-color: var(--border-hover);
+  background: var(--surface);
+  transform: rotate(20deg) scale(1.1);
+  box-shadow: 0 0 15px rgba(255, 148, 51, 0.35);
 }
 
 .nav-logo {

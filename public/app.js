@@ -53,6 +53,7 @@ function getAuthHeaders(additionalHeaders = {}) {
 
 /* --- INIT --- */
 document.addEventListener('DOMContentLoaded', async () => {
+  initTheme();
   setupScrollEffects();
   setupIntersectionObservers();
   await checkAuthStatus();
@@ -1075,3 +1076,39 @@ function toggleMusic() {
     musicBtn.innerText = '⏸️';
   }
 }
+
+/* --- THEME TOGGLE (DARK / LIGHT MODE) --- */
+function initTheme() {
+  const savedTheme = localStorage.getItem('kv_theme') || 'dark';
+  setTheme(savedTheme, false);
+}
+
+function setTheme(theme, notify = true) {
+  const root = document.documentElement;
+  root.setAttribute('data-theme', theme);
+  localStorage.setItem('kv_theme', theme);
+  
+  const themeBtn = document.getElementById('themeToggleBtn');
+  if (themeBtn) {
+    if (theme === 'light') {
+      themeBtn.innerText = '🌙';
+      themeBtn.title = 'Switch to Dark Mode (Black)';
+    } else {
+      themeBtn.innerText = '☀️';
+      themeBtn.title = 'Switch to Light Mode (White)';
+    }
+  }
+  
+  if (notify) {
+    showToast(`Switched to ${theme === 'light' ? 'Light' : 'Dark'} Mode`, 'success');
+  }
+}
+
+function toggleTheme() {
+  const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+  const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  setTheme(nextTheme, true);
+}
+window.toggleTheme = toggleTheme;
+window.initTheme = initTheme;
+

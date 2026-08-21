@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=2026.6" />
+  <link rel="stylesheet" href="style.css?v=2026.7" />
 </head>
 <body>
   <audio id="bgMusic" loop>
@@ -33,6 +33,7 @@
       <li><a href="#contact" class="nav-link" data-section="contact">Feedback</a></li>
     </ul>
     <div class="nav-actions">
+      <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Switch to Light Mode (White)" aria-label="Toggle Theme">☀️</button>
       <button class="btn-icon" id="musicBtn" onclick="toggleMusic()" style="font-size: 1.5rem; color: var(--gold); border: none; background: transparent;" aria-label="Toggle Music">🎵</button>
       <button class="btn-admin" id="adminBtn" onclick="openAdminModal()">Admin</button>
       <button class="hamburger" id="hamburger" onclick="toggleMenu()">
@@ -396,6 +397,6 @@
   <!-- TOAST -->
   <div class="toast" id="toast"></div>
 
-  <script src="app.js?v=2026.6"></script>
+  <script src="app.js?v=2026.7"></script>
 </body>
 </html>
