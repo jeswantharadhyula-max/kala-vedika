@@ -2,6 +2,14 @@ const express = require('express');
 const router = express.Router();
 const Feedback = require('../models/Feedback');
 const { requireAdmin } = require('../middleware/auth');
+const { rateLimit } = require('../middleware/rateLimiter');
+
+// Rate limit feedback submissions: max 5 per 10 minutes per IP
+const feedbackLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 5,
+  message: { error: 'Too many feedback submissions from your IP. Please try again later.' }
+});
 
 router.get('/', requireAdmin, async (req, res) => {
   try {
@@ -10,13 +18,23 @@ router.get('/', requireAdmin, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', feedbackLimiter, async (req, res) => {
   try {
     const { name, email, message } = req.body;
     if (!name || !email || !message) return res.status(400).json({ error: 'Name, email, and message are required' });
-    const feedback = new Feedback({ name, email, message });
+    
+    // Length sanitization
+    const safeName = String(name).trim().slice(0, 100);
+    const safeEmail = String(email).trim().slice(0, 150);
+    const safeMessage = String(message).trim().slice(0, 2000);
+    
+    if (safeName.length < 2 || safeMessage.length < 5) {
+      return res.status(400).json({ error: 'Please enter a valid name and message.' });
+    }
+    
+    const feedback = new Feedback({ name: safeName, email: safeEmail, message: safeMessage });
     await feedback.save();
-    res.status(201).json(feedback);
+    res.status(201).json({ success: true, message: 'Feedback received' });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 

@@ -1,94 +1,107 @@
 const express = require('express');
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
+const mongoose = require('mongoose');
 const router = express.Router();
 const Founder = require('../models/Founder');
 const { requireAdmin } = require('../middleware/auth');
+const { createUploader, safeUnlinkUpload } = require('../middleware/fileHelper');
 
-const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, path.join(__dirname, '../public/uploads')),
-  filename: (req, file, cb) => cb(null, 'founder_' + Date.now() + path.extname(file.originalname))
-});
-const fileFilter = (req, file, cb) => {
-  if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new Error('Only image files (JPEG, PNG, WebP, GIF) are allowed'), false);
-  }
-};
-const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 }, fileFilter });
+const upload = createUploader('founder');
 
 router.get('/', async (req, res) => {
   try {
     const founders = await Founder.find().sort({ display_order: 1 });
     res.json(founders);
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { res.status(500).json({ error: 'Failed to fetch founders' }); }
+});
+
+router.get('/:id', async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid founder ID' });
+    }
+    const founder = await Founder.findById(req.params.id);
+    if (!founder) return res.status(404).json({ error: 'Founder not found' });
+    res.json(founder);
+  } catch (e) { res.status(500).json({ error: 'Failed to fetch founder' }); }
 });
 
 router.post('/', requireAdmin, upload.single('photo'), async (req, res) => {
   try {
     const { name, designation, department, bio, year, display_order } = req.body;
-    if (!name || !designation) return res.status(400).json({ error: 'Name and designation are required' });
+    if (!name || !designation) {
+      if (req.file) safeUnlinkUpload('/uploads/' + req.file.filename);
+      return res.status(400).json({ error: 'Name and designation are required' });
+    }
     const photo = req.file ? '/uploads/' + req.file.filename : null;
-    const founder = new Founder({ name, designation, department: department || '', bio: bio || '', year: year || '', display_order: Number(display_order) || 0, photo });
+    const founder = new Founder({
+      name: String(name).trim(),
+      designation: String(designation).trim(),
+      department: department ? String(department).trim() : '',
+      bio: bio ? String(bio).trim() : '',
+      year: year ? String(year).trim() : '',
+      display_order: Number(display_order) || 0,
+      photo
+    });
     await founder.save();
     res.status(201).json(founder);
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) {
+    if (req.file) safeUnlinkUpload('/uploads/' + req.file.filename);
+    res.status(500).json({ error: 'Failed to save founder' });
+  }
 });
 
 router.put('/:id', requireAdmin, upload.single('photo'), async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      if (req.file) safeUnlinkUpload('/uploads/' + req.file.filename);
+      return res.status(400).json({ error: 'Invalid founder ID' });
+    }
     const founder = await Founder.findById(req.params.id);
-    if (!founder) return res.status(404).json({ error: 'Founder not found' });
+    if (!founder) {
+      if (req.file) safeUnlinkUpload('/uploads/' + req.file.filename);
+      return res.status(404).json({ error: 'Founder not found' });
+    }
     if (req.file) {
-      if (founder.photo) { const old = path.join(__dirname, '../public', founder.photo); if (fs.existsSync(old)) fs.unlinkSync(old); }
+      if (founder.photo) safeUnlinkUpload(founder.photo);
       founder.photo = '/uploads/' + req.file.filename;
     }
     const { name, designation, department, bio, year, display_order } = req.body;
-    if (name) founder.name = name;
-    if (designation) founder.designation = designation;
-    if (department !== undefined) founder.department = department;
-    if (bio !== undefined) founder.bio = bio;
-    if (year !== undefined) founder.year = year;
+    if (name) founder.name = String(name).trim();
+    if (designation) founder.designation = String(designation).trim();
+    if (department !== undefined) founder.department = String(department).trim();
+    if (bio !== undefined) founder.bio = String(bio).trim();
+    if (year !== undefined) founder.year = String(year).trim();
     if (display_order !== undefined) founder.display_order = Number(display_order);
     await founder.save();
     res.json(founder);
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) {
+    if (req.file) safeUnlinkUpload('/uploads/' + req.file.filename);
+    res.status(500).json({ error: 'Failed to update founder' });
+  }
 });
-
-const mongoose = require('mongoose');
 
 router.delete('/all', requireAdmin, async (req, res) => {
   try {
     const founders = await Founder.find({});
     for (const f of founders) {
-      if (f.photo) {
-        const old = path.join(__dirname, '../public', f.photo);
-        if (fs.existsSync(old)) try { fs.unlinkSync(old); } catch (_) {}
-      }
+      if (f.photo) safeUnlinkUpload(f.photo);
     }
     await Founder.deleteMany({});
     res.json({ success: true });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { res.status(500).json({ error: 'Failed to clear founders' }); }
 });
 
 router.delete('/:id', requireAdmin, async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({ error: 'Invalid ID format' });
+      return res.status(400).json({ error: 'Invalid founder ID' });
     }
     const founder = await Founder.findById(req.params.id);
     if (!founder) return res.status(404).json({ error: 'Founder not found' });
-    if (founder.photo) {
-      const old = path.join(__dirname, '../public', founder.photo);
-      if (fs.existsSync(old)) try { fs.unlinkSync(old); } catch (_) {}
-    }
+    if (founder.photo) safeUnlinkUpload(founder.photo);
     await Founder.findByIdAndDelete(req.params.id);
     res.json({ success: true });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { res.status(500).json({ error: 'Failed to delete founder' }); }
 });
 
 module.exports = router;
