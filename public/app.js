@@ -1058,7 +1058,17 @@ function triggerPhotoAdjust(src, type = 'members', targetPreviewId = '') {
   photoAdjustState.aspectRatio = defaultRatio;
   
   const img = new Image();
-  img.crossOrigin = 'anonymous';
+  if (src.startsWith('http://') || src.startsWith('https://')) {
+    try {
+      const parsed = new URL(src);
+      if (parsed.origin !== window.location.origin) {
+        img.crossOrigin = 'anonymous';
+      }
+    } catch (_) {
+      img.crossOrigin = 'anonymous';
+    }
+  }
+
   img.onload = () => {
     photoAdjustState.img = img;
     updateCanvasDimensions();
@@ -1067,8 +1077,26 @@ function triggerPhotoAdjust(src, type = 'members', targetPreviewId = '') {
     openPhotoAdjustModal();
     setupAdjustCanvasListeners();
   };
+
   img.onerror = () => {
-    showToast('Failed to load image for adjustment', 'error');
+    // If crossOrigin caused an issue, retry without crossOrigin
+    if (img.crossOrigin) {
+      const fallbackImg = new Image();
+      fallbackImg.onload = () => {
+        photoAdjustState.img = fallbackImg;
+        updateCanvasDimensions();
+        fitImageToCanvas();
+        renderAdjustCanvas();
+        openPhotoAdjustModal();
+        setupAdjustCanvasListeners();
+      };
+      fallbackImg.onerror = () => {
+        showToast('Failed to load image for adjustment', 'error');
+      };
+      fallbackImg.src = src;
+    } else {
+      showToast('Failed to load image for adjustment', 'error');
+    }
   };
   img.src = src;
 }
