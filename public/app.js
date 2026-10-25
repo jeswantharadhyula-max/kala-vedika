@@ -234,7 +234,10 @@ function renderFounders(data) {
   container.innerHTML = data.map(f => `
     <div class="founder-card reveal" style="position:relative;">
       ${state.isAdmin ? `
-        <button class="card-admin-del" onclick="event.stopPropagation(); deleteItem('founders', '${f._id}')" title="Delete Founder">🗑️</button>
+        <div class="card-admin-actions">
+          <button class="card-admin-btn card-admin-edit" onclick="event.stopPropagation(); openEditModal('founders', '${f._id}')" title="Edit Founder">✏️</button>
+          <button class="card-admin-btn card-admin-del" onclick="event.stopPropagation(); deleteItem('founders', '${f._id}')" title="Delete Founder">🗑️</button>
+        </div>
       ` : ''}
       <div class="founder-photo">
         ${f.photo ? `<img src="${sanitizeText(f.photo)}" alt="${sanitizeText(f.name)}" loading="lazy">` : `<div class="founder-photo-placeholder">👤</div>`}
@@ -279,7 +282,10 @@ function filterMembers(roleFilter) {
   container.innerHTML = filtered.map(m => `
     <div class="member-card reveal" style="position:relative;" onclick="showMemberDetails('${m._id}')">
       ${state.isAdmin ? `
-        <button class="card-admin-del" onclick="event.stopPropagation(); deleteItem('members', '${m._id}')" title="Delete Member">🗑️</button>
+        <div class="card-admin-actions">
+          <button class="card-admin-btn card-admin-edit" onclick="event.stopPropagation(); openEditModal('members', '${m._id}')" title="Edit Member">✏️</button>
+          <button class="card-admin-btn card-admin-del" onclick="event.stopPropagation(); deleteItem('members', '${m._id}')" title="Delete Member">🗑️</button>
+        </div>
       ` : ''}
       <div class="member-avatar">
         ${m.photo ? `<img src="${sanitizeText(m.photo)}" alt="${sanitizeText(m.name)}" loading="lazy">` : `<span>${sanitizeText(m.name.charAt(0))}</span>`}
@@ -309,9 +315,14 @@ function showMemberDetails(id) {
       <div style="display:inline-block; border:1px solid rgba(212,168,67,0.3); padding:0.3rem 1rem; border-radius:50px; font-size:0.8rem; margin-bottom:1.5rem;">Year ${sanitizeText(String(member.year || '?'))} • ${sanitizeText(member.department)} • Sec ${sanitizeText(member.section)} • ${sanitizeText(member.roll_no || 'N/A')} • ${sanitizeText(member.gen || 'Gen X')}</div>
       ${member.bio ? `<p style="color:var(--text-muted); font-size:0.95rem; line-height:1.6; text-align:left; background:var(--surface); padding:1.5rem; border-radius:var(--radius-sm); border:1px solid var(--border);">${sanitizeText(member.bio)}</p>` : ''}
       ${state.isAdmin ? `
-        <button class="btn-danger" style="margin-top:1.5rem; width:100%; display:flex; align-items:center; justify-content:center; gap:0.5rem; padding:0.75rem 1rem; font-size:0.9rem;" onclick="deleteItem('members', '${member._id}')">
-          🗑️ Delete Member
-        </button>
+        <div style="margin-top:1.5rem; display:flex; gap:0.8rem;">
+          <button class="btn-primary" style="flex:1; display:flex; align-items:center; justify-content:center; gap:0.5rem; padding:0.75rem 1rem; font-size:0.9rem;" onclick="openEditModal('members', '${member._id}')">
+            ✏️ Edit Member
+          </button>
+          <button class="btn-danger" style="flex:1; display:flex; align-items:center; justify-content:center; gap:0.5rem; padding:0.75rem 1rem; font-size:0.9rem;" onclick="deleteItem('members', '${member._id}')">
+            🗑️ Delete Member
+          </button>
+        </div>
       ` : ''}
     </div>
   `;
@@ -340,7 +351,10 @@ function filterAchievements(category) {
   container.innerHTML = filtered.map(a => `
     <div class="achievement-card reveal" style="position:relative;">
       ${state.isAdmin ? `
-        <button class="card-admin-del" onclick="event.stopPropagation(); deleteItem('achievements', '${a._id}')" title="Delete Achievement">🗑️</button>
+        <div class="card-admin-actions">
+          <button class="card-admin-btn card-admin-edit" onclick="event.stopPropagation(); openEditModal('achievements', '${a._id}')" title="Edit Achievement">✏️</button>
+          <button class="card-admin-btn card-admin-del" onclick="event.stopPropagation(); deleteItem('achievements', '${a._id}')" title="Delete Achievement">🗑️</button>
+        </div>
       ` : ''}
       ${a.photo ? `<img src="${sanitizeText(a.photo)}" style="width:100%; height:160px; object-fit:cover; border-radius:8px; margin-bottom:1rem;">` : `<div class="achievement-icon">🏆</div>`}
       <div class="achievement-category">${sanitizeText(a.category)}</div>
@@ -424,9 +438,14 @@ function showEventDetails(id) {
       </div>
       <p style="color:var(--text-muted); font-size:1rem; line-height:1.6; text-align:left; background:var(--surface); padding:1.5rem; border-radius:var(--radius-sm); border:1px solid var(--border);">${sanitizeText(e.description)}</p>
       ${state.isAdmin ? `
-        <button class="btn-danger" style="margin-top:1.5rem; width:100%; display:flex; align-items:center; justify-content:center; gap:0.5rem; padding:0.75rem 1rem; font-size:0.9rem;" onclick="deleteItem('events', '${e._id}')">
-          🗑️ Delete Event
-        </button>
+        <div style="margin-top:1.5rem; display:flex; gap:0.8rem;">
+          <button class="btn-primary" style="flex:1; display:flex; align-items:center; justify-content:center; gap:0.5rem; padding:0.75rem 1rem; font-size:0.9rem;" onclick="openEditModal('events', '${e._id}')">
+            ✏️ Edit Event
+          </button>
+          <button class="btn-danger" style="flex:1; display:flex; align-items:center; justify-content:center; gap:0.5rem; padding:0.75rem 1rem; font-size:0.9rem;" onclick="deleteItem('events', '${e._id}')">
+            🗑️ Delete Event
+          </button>
+        </div>
       ` : ''}
     </div>
   `;
@@ -651,6 +670,7 @@ function renderDashboardContent() {
               <td>${sanitizeText(m.department)} (${sanitizeText(m.section)})</td>
               <td>${sanitizeText(m.role)}</td>
               <td class="actions">
+                <button class="btn-icon btn-edit" onclick="openEditModal('members', '${m._id}')" title="Edit">✏️ Edit</button>
                 <button class="btn-icon btn-del" onclick="deleteItem('members', '${m._id}')" title="Delete">🗑️ Delete</button>
               </td>
             </tr>
@@ -670,6 +690,7 @@ function renderDashboardContent() {
               <td><strong>${sanitizeText(f.name)}</strong></td>
               <td>${sanitizeText(f.designation)}</td>
               <td class="actions">
+                <button class="btn-icon btn-edit" onclick="openEditModal('founders', '${f._id}')" title="Edit">✏️ Edit</button>
                 <button class="btn-icon btn-del" onclick="deleteItem('founders', '${f._id}')" title="Delete">🗑️ Delete</button>
               </td>
             </tr>
@@ -689,6 +710,7 @@ function renderDashboardContent() {
               <td>${sanitizeText(a.category)}</td>
               <td>${sanitizeText(a.date)}</td>
               <td class="actions">
+                <button class="btn-icon btn-edit" onclick="openEditModal('achievements', '${a._id}')" title="Edit">✏️ Edit</button>
                 <button class="btn-icon btn-del" onclick="deleteItem('achievements', '${a._id}')" title="Delete">🗑️ Delete</button>
               </td>
             </tr>
@@ -708,6 +730,7 @@ function renderDashboardContent() {
               <td>${sanitizeText(e.event_date)}</td>
               <td><span class="event-status ${sanitizeText(e.status)}">${sanitizeText(e.status)}</span></td>
               <td class="actions">
+                <button class="btn-icon btn-edit" onclick="openEditModal('events', '${e._id}')" title="Edit">✏️ Edit</button>
                 <button class="btn-icon btn-del" onclick="deleteItem('events', '${e._id}')" title="Delete">🗑️ Delete</button>
               </td>
             </tr>
@@ -906,7 +929,11 @@ function openCreateModal(type, prefillDate = '') {
         <div class="form-group"><label>Generation</label><select name="gen" required>${genOptions}</select></div>
         <div class="form-group"><label>Role</label><input type="text" name="role" placeholder="e.g. Member, Secretary, Cultural Head" required></div>
         <div class="form-group"><label>Bio</label><textarea name="bio"></textarea></div>
-        <div class="form-group"><label>Photo</label><input type="file" name="photo" accept="image/jpeg,image/png,image/webp,image/gif"></div>
+        <div class="form-group">
+          <label>Photo</label>
+          <input type="file" name="photo" accept="image/jpeg,image/png,image/webp,image/gif" onchange="previewSelectedPhoto(this, 'createMemberPhotoPreview')">
+          <div id="createMemberPhotoPreview"></div>
+        </div>
         <button type="submit" class="btn-primary btn-full">Save Member</button>
       </form>
     `;
@@ -927,7 +954,11 @@ function openCreateModal(type, prefillDate = '') {
           </select>
         </div>
         <div class="form-group"><label>Description</label><textarea name="description" required></textarea></div>
-        <div class="form-group"><label>Photo</label><input type="file" name="photo" accept="image/jpeg,image/png,image/webp,image/gif"></div>
+        <div class="form-group">
+          <label>Photo</label>
+          <input type="file" name="photo" accept="image/jpeg,image/png,image/webp,image/gif" onchange="previewSelectedPhoto(this, 'createEventPhotoPreview')">
+          <div id="createEventPhotoPreview"></div>
+        </div>
         <button type="submit" class="btn-primary btn-full">Save Event</button>
       </form>
     `;
@@ -939,7 +970,11 @@ function openCreateModal(type, prefillDate = '') {
         <div class="form-group"><label>Category</label><input type="text" name="category" placeholder="e.g. Dance, Music, Drama, Award" required></div>
         <div class="form-group"><label>Date (YYYY-MM-DD)</label><input type="date" name="date" required></div>
         <div class="form-group"><label>Description</label><textarea name="description" required></textarea></div>
-        <div class="form-group"><label>Photo</label><input type="file" name="photo" accept="image/jpeg,image/png,image/webp,image/gif"></div>
+        <div class="form-group">
+          <label>Photo</label>
+          <input type="file" name="photo" accept="image/jpeg,image/png,image/webp,image/gif" onchange="previewSelectedPhoto(this, 'createAchPhotoPreview')">
+          <div id="createAchPhotoPreview"></div>
+        </div>
         <button type="submit" class="btn-primary btn-full">Save Achievement</button>
       </form>
     `;
@@ -953,7 +988,11 @@ function openCreateModal(type, prefillDate = '') {
         <div class="form-group"><label>Year</label><input type="text" name="year" placeholder="e.g. 2025" required></div>
         <div class="form-group"><label>Display Order</label><input type="number" name="display_order" placeholder="e.g. 1" min="1" required></div>
         <div class="form-group"><label>Bio</label><textarea name="bio"></textarea></div>
-        <div class="form-group"><label>Photo</label><input type="file" name="photo" accept="image/jpeg,image/png,image/webp,image/gif"></div>
+        <div class="form-group">
+          <label>Photo</label>
+          <input type="file" name="photo" accept="image/jpeg,image/png,image/webp,image/gif" onchange="previewSelectedPhoto(this, 'createFounderPhotoPreview')">
+          <div id="createFounderPhotoPreview"></div>
+        </div>
         <button type="submit" class="btn-primary btn-full">Save Founder</button>
       </form>
     `;
@@ -961,6 +1000,270 @@ function openCreateModal(type, prefillDate = '') {
   
   content.innerHTML = formHtml;
   itemModal.classList.add('open');
+}
+
+async function openEditModal(type, id) {
+  if (!state.isAdmin) return;
+  if (!id || id === 'undefined') {
+    showToast('Invalid item ID', 'error');
+    return;
+  }
+  
+  let item = null;
+  if (state[type] && Array.isArray(state[type])) {
+    item = state[type].find(x => String(x._id) === String(id));
+  }
+  
+  if (!item) {
+    try {
+      const res = await fetch(`${API}/${type}/${id}`, {
+        headers: getAuthHeaders(),
+        credentials: 'include'
+      });
+      if (res.ok) {
+        item = await res.json();
+      }
+    } catch (_) {}
+  }
+  
+  if (!item) {
+    showToast('Failed to find item to edit', 'error');
+    return;
+  }
+  
+  const content = document.getElementById('itemModalContent');
+  let formHtml = '';
+  
+  if (type === 'members') {
+    let genOptions = '<option value="" disabled>-- Select Generation --</option>';
+    for (let i = 1; i <= 100; i++) {
+      const g = `Gen ${i}`;
+      const sel = (item.gen === g) ? 'selected' : '';
+      genOptions += `<option value="${g}" ${sel}>${g}</option>`;
+    }
+    
+    let yearOptions = '<option value="" disabled>-- Select Year --</option>';
+    for (let i = 1; i <= 4; i++) {
+      const sel = (String(item.year) === String(i)) ? 'selected' : '';
+      yearOptions += `<option value="${i}" ${sel}>Year ${i}</option>`;
+    }
+    
+    formHtml = `
+      <h2 class="item-modal-title">Edit Member</h2>
+      <form onsubmit="handleEditSubmit(event, 'members', '${item._id}')">
+        <div class="form-group"><label>Name</label><input type="text" name="name" value="${sanitizeText(item.name || '')}" required></div>
+        <div class="form-group"><label>Roll No</label><input type="text" name="roll_no" value="${sanitizeText(item.roll_no || '')}" required></div>
+        <div class="form-group"><label>Department</label><input type="text" name="department" value="${sanitizeText(item.department || '')}" required></div>
+        <div class="form-group"><label>Section</label><input type="text" name="section" value="${sanitizeText(item.section || '')}" required></div>
+        <div class="form-group"><label>Year</label><select name="year" required>${yearOptions}</select></div>
+        <div class="form-group"><label>Generation</label><select name="gen" required>${genOptions}</select></div>
+        <div class="form-group"><label>Role</label><input type="text" name="role" value="${sanitizeText(item.role || '')}" placeholder="e.g. Member, Secretary, Cultural Head" required></div>
+        <div class="form-group"><label>Bio</label><textarea name="bio">${sanitizeText(item.bio || '')}</textarea></div>
+        <div class="form-group">
+          <label>Photo</label>
+          ${item.photo ? `
+            <div style="background:var(--surface); padding:0.8rem; border-radius:var(--radius-sm); border:1px solid var(--border); margin-bottom:0.75rem;">
+              <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.4rem; text-transform:uppercase;">Current Photo:</div>
+              <div style="display:flex; align-items:center; gap:1rem;">
+                <img src="${sanitizeText(item.photo)}" style="width:64px; height:64px; object-fit:cover; border-radius:8px; border:1px solid var(--border);" alt="Current Photo">
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem; color:#e57373; cursor:pointer;">
+                  <input type="checkbox" name="remove_photo" value="true" onchange="handleRemovePhotoToggle(this, 'memberPhotoFile')"> Remove current photo
+                </label>
+              </div>
+            </div>
+            <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.3rem; display:block;">Change / Upload New Photo:</label>
+          ` : `
+            <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.3rem; display:block;">Add Photo:</label>
+          `}
+          <input type="file" id="memberPhotoFile" name="photo" accept="image/jpeg,image/png,image/webp,image/gif" onchange="previewSelectedPhoto(this, 'memberPhotoPreview')">
+          <div id="memberPhotoPreview"></div>
+        </div>
+        <button type="submit" class="btn-primary btn-full">Save Changes</button>
+      </form>
+    `;
+  } else if (type === 'events') {
+    formHtml = `
+      <h2 class="item-modal-title">Edit Event</h2>
+      <form onsubmit="handleEditSubmit(event, 'events', '${item._id}')">
+        <div class="form-group"><label>Title</label><input type="text" name="title" value="${sanitizeText(item.title || '')}" required></div>
+        <div class="form-group"><label>Date (YYYY-MM-DD)</label><input type="date" name="event_date" value="${sanitizeText(item.event_date || '')}" required></div>
+        <div class="form-group"><label>Time (e.g. 10:00 AM)</label><input type="text" name="event_time" value="${sanitizeText(item.event_time || '')}" placeholder="e.g. 10:00 AM"></div>
+        <div class="form-group"><label>Venue</label><input type="text" name="venue" value="${sanitizeText(item.venue || '')}" required></div>
+        <div class="form-group"><label>Category</label><input type="text" name="category" value="${sanitizeText(item.category || '')}" placeholder="e.g. Cultural, Workshop, Competition" required></div>
+        <div class="form-group"><label>Status</label>
+          <select name="status" required>
+            <option value="upcoming" ${item.status === 'upcoming' ? 'selected' : ''}>Upcoming</option>
+            <option value="completed" ${item.status === 'completed' ? 'selected' : ''}>Completed</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Description</label><textarea name="description" required>${sanitizeText(item.description || '')}</textarea></div>
+        <div class="form-group">
+          <label>Photo</label>
+          ${item.photo ? `
+            <div style="background:var(--surface); padding:0.8rem; border-radius:var(--radius-sm); border:1px solid var(--border); margin-bottom:0.75rem;">
+              <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.4rem; text-transform:uppercase;">Current Photo:</div>
+              <div style="display:flex; align-items:center; gap:1rem;">
+                <img src="${sanitizeText(item.photo)}" style="width:64px; height:64px; object-fit:cover; border-radius:8px; border:1px solid var(--border);" alt="Current Photo">
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem; color:#e57373; cursor:pointer;">
+                  <input type="checkbox" name="remove_photo" value="true" onchange="handleRemovePhotoToggle(this, 'eventPhotoFile')"> Remove current photo
+                </label>
+              </div>
+            </div>
+            <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.3rem; display:block;">Change / Upload New Photo:</label>
+          ` : `
+            <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.3rem; display:block;">Add Photo:</label>
+          `}
+          <input type="file" id="eventPhotoFile" name="photo" accept="image/jpeg,image/png,image/webp,image/gif" onchange="previewSelectedPhoto(this, 'eventPhotoPreview')">
+          <div id="eventPhotoPreview"></div>
+        </div>
+        <button type="submit" class="btn-primary btn-full">Save Changes</button>
+      </form>
+    `;
+  } else if (type === 'achievements') {
+    formHtml = `
+      <h2 class="item-modal-title">Edit Achievement</h2>
+      <form onsubmit="handleEditSubmit(event, 'achievements', '${item._id}')">
+        <div class="form-group"><label>Title</label><input type="text" name="title" value="${sanitizeText(item.title || '')}" required></div>
+        <div class="form-group"><label>Category</label><input type="text" name="category" value="${sanitizeText(item.category || '')}" placeholder="e.g. Dance, Music, Drama, Award" required></div>
+        <div class="form-group"><label>Date (YYYY-MM-DD)</label><input type="date" name="date" value="${sanitizeText(item.date || '')}" required></div>
+        <div class="form-group"><label>Description</label><textarea name="description" required>${sanitizeText(item.description || '')}</textarea></div>
+        <div class="form-group">
+          <label>Photo</label>
+          ${item.photo ? `
+            <div style="background:var(--surface); padding:0.8rem; border-radius:var(--radius-sm); border:1px solid var(--border); margin-bottom:0.75rem;">
+              <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.4rem; text-transform:uppercase;">Current Photo:</div>
+              <div style="display:flex; align-items:center; gap:1rem;">
+                <img src="${sanitizeText(item.photo)}" style="width:64px; height:64px; object-fit:cover; border-radius:8px; border:1px solid var(--border);" alt="Current Photo">
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem; color:#e57373; cursor:pointer;">
+                  <input type="checkbox" name="remove_photo" value="true" onchange="handleRemovePhotoToggle(this, 'achPhotoFile')"> Remove current photo
+                </label>
+              </div>
+            </div>
+            <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.3rem; display:block;">Change / Upload New Photo:</label>
+          ` : `
+            <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.3rem; display:block;">Add Photo:</label>
+          `}
+          <input type="file" id="achPhotoFile" name="photo" accept="image/jpeg,image/png,image/webp,image/gif" onchange="previewSelectedPhoto(this, 'achPhotoPreview')">
+          <div id="achPhotoPreview"></div>
+        </div>
+        <button type="submit" class="btn-primary btn-full">Save Changes</button>
+      </form>
+    `;
+  } else if (type === 'founders') {
+    formHtml = `
+      <h2 class="item-modal-title">Edit Founder</h2>
+      <form onsubmit="handleEditSubmit(event, 'founders', '${item._id}')">
+        <div class="form-group"><label>Name</label><input type="text" name="name" value="${sanitizeText(item.name || '')}" required></div>
+        <div class="form-group"><label>Designation</label><input type="text" name="designation" value="${sanitizeText(item.designation || '')}" required placeholder="e.g. Chief Patron, Founding Director"></div>
+        <div class="form-group"><label>Department</label><input type="text" name="department" value="${sanitizeText(item.department || '')}" placeholder="e.g. Principal, Cultural Studies"></div>
+        <div class="form-group"><label>Year</label><input type="text" name="year" value="${sanitizeText(item.year || '')}" placeholder="e.g. 2025" required></div>
+        <div class="form-group"><label>Display Order</label><input type="number" name="display_order" value="${item.display_order ?? 0}" min="1" required></div>
+        <div class="form-group"><label>Bio</label><textarea name="bio">${sanitizeText(item.bio || '')}</textarea></div>
+        <div class="form-group">
+          <label>Photo</label>
+          ${item.photo ? `
+            <div style="background:var(--surface); padding:0.8rem; border-radius:var(--radius-sm); border:1px solid var(--border); margin-bottom:0.75rem;">
+              <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.4rem; text-transform:uppercase;">Current Photo:</div>
+              <div style="display:flex; align-items:center; gap:1rem;">
+                <img src="${sanitizeText(item.photo)}" style="width:64px; height:64px; object-fit:cover; border-radius:8px; border:1px solid var(--border);" alt="Current Photo">
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem; color:#e57373; cursor:pointer;">
+                  <input type="checkbox" name="remove_photo" value="true" onchange="handleRemovePhotoToggle(this, 'founderPhotoFile')"> Remove current photo
+                </label>
+              </div>
+            </div>
+            <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.3rem; display:block;">Change / Upload New Photo:</label>
+          ` : `
+            <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.3rem; display:block;">Add Photo:</label>
+          `}
+          <input type="file" id="founderPhotoFile" name="photo" accept="image/jpeg,image/png,image/webp,image/gif" onchange="previewSelectedPhoto(this, 'founderPhotoPreview')">
+          <div id="founderPhotoPreview"></div>
+        </div>
+        <button type="submit" class="btn-primary btn-full">Save Changes</button>
+      </form>
+    `;
+  }
+  
+  content.innerHTML = formHtml;
+  itemModal.classList.add('open');
+}
+
+function previewSelectedPhoto(input, previewContainerId) {
+  const container = document.getElementById(previewContainerId);
+  if (!container) return;
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      container.innerHTML = `
+        <div style="margin-top: 0.6rem; display: flex; align-items: center; gap: 0.8rem; background: var(--surface2); padding: 0.5rem 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--gold);">
+          <img src="${e.target.result}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px;" alt="Selected Photo Preview">
+          <span style="font-size: 0.8rem; color: var(--gold); font-weight: 500;">✓ New photo selected</span>
+        </div>
+      `;
+    };
+    reader.readAsDataURL(input.files[0]);
+  } else {
+    container.innerHTML = '';
+  }
+}
+
+function handleRemovePhotoToggle(checkbox, fileInputId) {
+  const fileInput = document.getElementById(fileInputId);
+  if (fileInput) {
+    fileInput.disabled = checkbox.checked;
+    if (checkbox.checked) fileInput.value = '';
+  }
+  const preview = checkbox.form ? checkbox.form.querySelector('[id$="Preview"]') : null;
+  if (preview && checkbox.checked) preview.innerHTML = '';
+}
+
+async function handleEditSubmit(e, type, id) {
+  e.preventDefault();
+  const form = e.target;
+  const btn = form.querySelector('button[type="submit"]');
+  const originalText = btn.innerText;
+  btn.innerText = 'Updating...';
+  btn.disabled = true;
+  
+  const formData = new FormData(form);
+  
+  try {
+    const res = await fetch(`${API}/${type}/${id}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: formData,
+      credentials: 'include'
+    });
+    
+    if (res.ok) {
+      showToast('Successfully updated', 'success');
+      closeItemModal();
+      
+      // Refresh data
+      if (type === 'members') { await fetchMembers(); updateStats(); }
+      if (type === 'founders') { await fetchFounders(); updateStats(); }
+      if (type === 'achievements') { await fetchAchievements(); updateStats(); }
+      if (type === 'events') { await fetchEvents(); updateStats(); }
+      
+      if (dashboardModal.classList.contains('open')) renderDashboardContent();
+    } else if (res.status === 401) {
+      localStorage.removeItem('kv_admin_token');
+      state.isAdmin = false;
+      state.adminEmail = null;
+      adminBtn.innerText = 'Admin Login';
+      dashboardModal.classList.remove('open');
+      closeItemModal();
+      renderAllPublicSections();
+      showToast('Unauthorized: Please log in as Admin first.', 'error');
+    } else {
+      const data = await res.json().catch(() => ({}));
+      showToast(data.error || 'Failed to update', 'error');
+    }
+  } catch (err) {
+    showToast('Network error — please try again', 'error');
+  } finally {
+    btn.innerText = originalText;
+    btn.disabled = false;
+  }
 }
 
 async function handleFormSubmit(e, type) {
@@ -1111,4 +1414,9 @@ function toggleTheme() {
 }
 window.toggleTheme = toggleTheme;
 window.initTheme = initTheme;
+window.openEditModal = openEditModal;
+window.handleEditSubmit = handleEditSubmit;
+window.previewSelectedPhoto = previewSelectedPhoto;
+window.handleRemovePhotoToggle = handleRemovePhotoToggle;
+
 

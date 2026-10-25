@@ -67,6 +67,9 @@ router.put('/:id', requireAdmin, upload.single('photo'), async (req, res) => {
     if (req.file) {
       if (event.photo) safeUnlinkUpload(event.photo);
       event.photo = '/uploads/' + req.file.filename;
+    } else if (req.body.remove_photo === 'true' || req.body.remove_photo === true) {
+      if (event.photo) safeUnlinkUpload(event.photo);
+      event.photo = null;
     }
     const { title, description, event_date, event_time, venue, category, status } = req.body;
     if (title) event.title = String(title).trim();

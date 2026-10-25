@@ -1202,18 +1202,45 @@ ul { list-style: none; }
   gap: 0.3rem;
   cursor: pointer;
 }
-.btn-edit { background: rgba(76,61,158,0.3); color: #a78bfa; border-color: rgba(76,61,158,0.4); }
-.btn-edit:hover { background: rgba(76,61,158,0.5); }
+.btn-edit { background: rgba(76,61,158,0.25); color: #a78bfa; border: 1px solid rgba(167,139,250,0.4); font-weight: 600; }
+.btn-edit:hover { background: #5b46be; color: #fff; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(91,70,190,0.3); }
 .btn-del { background: rgba(211,47,47,0.2); color: #d32f2f; border: 1px solid rgba(211,47,47,0.4); font-weight: 600; }
 .btn-del:hover { background: #d32f2f; color: #fff; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(211,47,47,0.3); }
 
-/* On-Card Admin Delete Button */
-.card-admin-del {
+/* On-Card Admin Actions */
+.card-admin-actions {
   position: absolute;
   top: 10px;
   right: 10px;
   z-index: 10;
-  background: rgba(211, 47, 47, 0.9);
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.card-admin-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all var(--transition);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+.card-admin-edit {
+  background: rgba(91, 70, 190, 0.95);
+  color: #ffffff;
+}
+.card-admin-edit:hover {
+  background: #4a34b2;
+  transform: scale(1.15);
+  box-shadow: 0 6px 16px rgba(91, 70, 190, 0.5);
+}
+.card-admin-del {
+  background: rgba(211, 47, 47, 0.95);
   color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.4);
   border-radius: 50%;
@@ -1234,6 +1261,7 @@ ul { list-style: none; }
 }
 
 /* Item Modal */
+#itemModal { z-index: 2100; }
 .item-modal { max-width: 540px; max-height: 90vh; overflow-y: auto; padding: 2rem; }
 .item-modal-title { font-family: 'Cinzel', serif; font-size: 1.1rem; color: var(--gold); margin-bottom: 1.5rem; }
 

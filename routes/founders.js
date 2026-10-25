@@ -64,6 +64,9 @@ router.put('/:id', requireAdmin, upload.single('photo'), async (req, res) => {
     if (req.file) {
       if (founder.photo) safeUnlinkUpload(founder.photo);
       founder.photo = '/uploads/' + req.file.filename;
+    } else if (req.body.remove_photo === 'true' || req.body.remove_photo === true) {
+      if (founder.photo) safeUnlinkUpload(founder.photo);
+      founder.photo = null;
     }
     const { name, designation, department, bio, year, display_order } = req.body;
     if (name) founder.name = String(name).trim();
@@ -71,7 +74,7 @@ router.put('/:id', requireAdmin, upload.single('photo'), async (req, res) => {
     if (department !== undefined) founder.department = String(department).trim();
     if (bio !== undefined) founder.bio = String(bio).trim();
     if (year !== undefined) founder.year = String(year).trim();
-    if (display_order !== undefined) founder.display_order = Number(display_order);
+    if (display_order !== undefined && display_order !== '') founder.display_order = Number(display_order);
     await founder.save();
     res.json(founder);
   } catch (e) {

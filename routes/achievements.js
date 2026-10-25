@@ -62,6 +62,9 @@ router.put('/:id', requireAdmin, upload.single('photo'), async (req, res) => {
     if (req.file) {
       if (achievement.photo) safeUnlinkUpload(achievement.photo);
       achievement.photo = '/uploads/' + req.file.filename;
+    } else if (req.body.remove_photo === 'true' || req.body.remove_photo === true) {
+      if (achievement.photo) safeUnlinkUpload(achievement.photo);
+      achievement.photo = null;
     }
     const { title, description, category, date } = req.body;
     if (title) achievement.title = String(title).trim();

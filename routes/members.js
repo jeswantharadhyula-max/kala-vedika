@@ -66,6 +66,9 @@ router.put('/:id', requireAdmin, upload.single('photo'), async (req, res) => {
     if (req.file) {
       if (member.photo) safeUnlinkUpload(member.photo);
       member.photo = '/uploads/' + req.file.filename;
+    } else if (req.body.remove_photo === 'true' || req.body.remove_photo === true) {
+      if (member.photo) safeUnlinkUpload(member.photo);
+      member.photo = null;
     }
     const { name, department, section, role, bio, roll_no, gen, year } = req.body;
     if (name) member.name = String(name).trim();
