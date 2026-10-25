@@ -1025,13 +1025,19 @@ let photoAdjustState = {
 
 function openPhotoAdjustModal() {
   const modal = document.getElementById('photoAdjustModal');
-  if (modal) modal.classList.add('open');
+  if (modal) {
+    modal.classList.add('open');
+    modal.style.display = 'flex';
+  }
 }
 
 function closePhotoAdjustModal(e) {
   const modal = document.getElementById('photoAdjustModal');
-  if (e && e.target !== modal) return;
-  if (modal) modal.classList.remove('open');
+  if (e && e.target !== modal && !e.target.classList.contains('modal-close')) return;
+  if (modal) {
+    modal.classList.remove('open');
+    modal.style.display = 'none';
+  }
 }
 
 function triggerPhotoAdjust(src, type = 'members', targetPreviewId = '') {
@@ -1071,10 +1077,10 @@ function triggerPhotoAdjust(src, type = 'members', targetPreviewId = '') {
 
   img.onload = () => {
     photoAdjustState.img = img;
+    openPhotoAdjustModal();
     updateCanvasDimensions();
     fitImageToCanvas();
     renderAdjustCanvas();
-    openPhotoAdjustModal();
     setupAdjustCanvasListeners();
   };
 
@@ -1084,10 +1090,10 @@ function triggerPhotoAdjust(src, type = 'members', targetPreviewId = '') {
       const fallbackImg = new Image();
       fallbackImg.onload = () => {
         photoAdjustState.img = fallbackImg;
+        openPhotoAdjustModal();
         updateCanvasDimensions();
         fitImageToCanvas();
         renderAdjustCanvas();
-        openPhotoAdjustModal();
         setupAdjustCanvasListeners();
       };
       fallbackImg.onerror = () => {

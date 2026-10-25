@@ -1269,6 +1269,9 @@ ul { list-style: none; }
 #photoAdjustModal {
   z-index: 2200;
 }
+#photoAdjustModal.open {
+  display: flex !important;
+}
 .photo-adjust-modal {
   max-width: 480px;
   max-height: 92vh;
