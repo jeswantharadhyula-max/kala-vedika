@@ -33,8 +33,8 @@ const uploadsDir = path.join(__dirname, 'public', 'uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 
 // Middleware
-app.use(express.json({ limit: '2mb' }));
-app.use(express.urlencoded({ extended: true, limit: '2mb' }));
+app.use(express.json({ limit: '15mb' }));
+app.use(express.urlencoded({ extended: true, limit: '15mb' }));
 app.use(express.static(path.join(__dirname, 'public'), {
   setHeaders: (res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -82,6 +82,11 @@ app.use('/api/achievements', require('./routes/achievements'));
 app.use('/api/events', require('./routes/events'));
 app.use('/api/feedback', require('./routes/feedback'));
 app.use('/api/contact', require('./routes/contact'));
+
+// Return 404 for missing uploaded files instead of returning index.html
+app.get('/uploads/*', (req, res) => {
+  res.status(404).json({ error: 'Image file not found' });
+});
 
 // Serve SPA
 app.get('*', (req, res) => {

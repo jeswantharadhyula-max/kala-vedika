@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const router = express.Router();
 const Event = require('../models/Event');
 const { requireAdmin } = require('../middleware/auth');
-const { createUploader, safeUnlinkUpload } = require('../middleware/fileHelper');
+const { createUploader, processUpload, safeUnlinkUpload } = require('../middleware/fileHelper');
 
 const upload = createUploader('event');
 
@@ -29,10 +29,14 @@ router.post('/', requireAdmin, upload.single('photo'), async (req, res) => {
   try {
     const { title, description, event_date, event_time, venue, category, status } = req.body;
     if (!title || !description || !event_date) {
-      if (req.file) safeUnlinkUpload('/uploads/' + req.file.filename);
       return res.status(400).json({ error: 'Title, description, and event_date are required' });
     }
-    const photo = req.file ? '/uploads/' + req.file.filename : null;
+    let photo = null;
+    if (req.file) {
+      photo = await processUpload(req.file, 'event');
+    } else if (req.body.photo_data && typeof req.body.photo_data === 'string' && req.body.photo_data.startsWith('data:image/')) {
+      photo = req.body.photo_data;
+    }
     const VALID_STATUSES = ['upcoming', 'completed'];
     const safeStatus = VALID_STATUSES.includes(status) ? status : 'upcoming';
     const event = new Event({
@@ -48,7 +52,6 @@ router.post('/', requireAdmin, upload.single('photo'), async (req, res) => {
     await event.save();
     res.status(201).json(event);
   } catch (e) {
-    if (req.file) safeUnlinkUpload('/uploads/' + req.file.filename);
     res.status(500).json({ error: 'Failed to save event' });
   }
 });
@@ -56,17 +59,18 @@ router.post('/', requireAdmin, upload.single('photo'), async (req, res) => {
 router.put('/:id', requireAdmin, upload.single('photo'), async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      if (req.file) safeUnlinkUpload('/uploads/' + req.file.filename);
       return res.status(400).json({ error: 'Invalid event ID' });
     }
     const event = await Event.findById(req.params.id);
     if (!event) {
-      if (req.file) safeUnlinkUpload('/uploads/' + req.file.filename);
       return res.status(404).json({ error: 'Event not found' });
     }
     if (req.file) {
       if (event.photo) safeUnlinkUpload(event.photo);
-      event.photo = '/uploads/' + req.file.filename;
+      event.photo = await processUpload(req.file, 'event');
+    } else if (req.body.photo_data && typeof req.body.photo_data === 'string' && req.body.photo_data.startsWith('data:image/')) {
+      if (event.photo) safeUnlinkUpload(event.photo);
+      event.photo = req.body.photo_data;
     } else if (req.body.remove_photo === 'true' || req.body.remove_photo === true) {
       if (event.photo) safeUnlinkUpload(event.photo);
       event.photo = null;
@@ -85,7 +89,6 @@ router.put('/:id', requireAdmin, upload.single('photo'), async (req, res) => {
     await event.save();
     res.json(event);
   } catch (e) {
-    if (req.file) safeUnlinkUpload('/uploads/' + req.file.filename);
     res.status(500).json({ error: 'Failed to update event' });
   }
 });

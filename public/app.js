@@ -241,7 +241,7 @@ function renderFounders(data) {
         </div>
       ` : ''}
       <div class="founder-photo">
-        ${f.photo ? `<img src="${sanitizeText(f.photo)}" alt="${sanitizeText(f.name)}" loading="lazy">` : `<div class="founder-photo-placeholder">👤</div>`}
+        ${f.photo ? `<img src="${sanitizeText(f.photo)}" alt="${sanitizeText(f.name)}" loading="lazy" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'founder-photo-placeholder\'>👤</div><div class=\'founder-order-badge\'>${sanitizeText(String(f.display_order))}</div>';">` : `<div class="founder-photo-placeholder">👤</div>`}
         <div class="founder-order-badge">${sanitizeText(String(f.display_order))}</div>
       </div>
       <div class="founder-info">
@@ -373,7 +373,7 @@ function renderMembers() {
         </div>
       ` : ''}
       <div class="member-avatar">
-        ${m.photo ? `<img src="${sanitizeText(m.photo)}" alt="${sanitizeText(m.name)}" loading="lazy">` : `<span>${sanitizeText(m.name.charAt(0))}</span>`}
+        ${m.photo ? `<img src="${sanitizeText(m.photo)}" alt="${sanitizeText(m.name)}" loading="lazy" onerror="this.onerror=null; this.parentElement.innerHTML='<span>${sanitizeText(m.name.charAt(0))}</span>';">` : `<span>${sanitizeText(m.name.charAt(0))}</span>`}
       </div>
       <h3 class="member-name">${sanitizeText(m.name)}</h3>
       <div class="member-role">${sanitizeText(m.role)}</div>
@@ -393,7 +393,7 @@ function showMemberDetails(id) {
   content.innerHTML = `
     <div style="text-align: center;">
       <div class="member-avatar" style="width:100%; height:250px; border-radius:12px; font-size:5rem; margin:0 auto 1.5rem;">
-        ${member.photo ? `<img src="${sanitizeText(member.photo)}" alt="${sanitizeText(member.name)}">` : `<span>${sanitizeText(member.name.charAt(0))}</span>`}
+        ${member.photo ? `<img src="${sanitizeText(member.photo)}" alt="${sanitizeText(member.name)}" onerror="this.onerror=null; this.parentElement.innerHTML='<span>${sanitizeText(member.name.charAt(0))}</span>';">` : `<span>${sanitizeText(member.name.charAt(0))}</span>`}
       </div>
       <h2 style="font-family:'Cinzel', serif; color:var(--gold); font-size:1.5rem; margin-bottom:0.5rem;">${sanitizeText(member.name)}</h2>
       <div style="color:var(--text-muted); font-weight:600; letter-spacing:0.1em; text-transform:uppercase; font-size:0.8rem; margin-bottom:1rem;">${sanitizeText(member.role)}</div>
@@ -441,7 +441,7 @@ function filterAchievements(category) {
           <button class="card-admin-btn card-admin-del" onclick="event.stopPropagation(); deleteItem('achievements', '${a._id}')" title="Delete Achievement">🗑️</button>
         </div>
       ` : ''}
-      ${a.photo ? `<img src="${sanitizeText(a.photo)}" style="width:100%; height:160px; object-fit:cover; border-radius:8px; margin-bottom:1rem;">` : `<div class="achievement-icon">🏆</div>`}
+      ${a.photo ? `<img src="${sanitizeText(a.photo)}" style="width:100%; height:160px; object-fit:cover; border-radius:8px; margin-bottom:1rem;" onerror="this.onerror=null; this.outerHTML='<div class=\'achievement-icon\'>🏆</div>';">` : `<div class="achievement-icon">🏆</div>`}
       <div class="achievement-category">${sanitizeText(a.category)}</div>
       <h3 class="achievement-title">${sanitizeText(a.title)}</h3>
       <p class="achievement-desc">${sanitizeText(a.description)}</p>
@@ -515,7 +515,7 @@ function showEventDetails(id) {
   const content = document.getElementById('itemModalContent');
   content.innerHTML = `
     <div style="text-align: center;">
-      ${e.photo ? `<img src="${sanitizeText(e.photo)}" style="width:100%; max-height:250px; object-fit:cover; border-radius:8px; margin-bottom:1.5rem;">` : ''}
+      ${e.photo ? `<img src="${sanitizeText(e.photo)}" style="width:100%; max-height:250px; object-fit:cover; border-radius:8px; margin-bottom:1.5rem;" onerror="this.onerror=null; this.style.display='none';">` : ''}
       <div class="event-category-tag" style="display:inline-block; margin-bottom:1rem; padding: 0.3rem 1rem; border-radius: 50px; background: rgba(212,168,67,0.1); border: 1px solid var(--gold); color: var(--gold); font-weight: bold; font-size: 0.8rem; text-transform: uppercase;">${sanitizeText(e.category)}</div>
       <h2 style="font-family:'Cinzel', serif; color:var(--text); font-size:1.8rem; margin-bottom:0.5rem;">${sanitizeText(e.title)}</h2>
       <div style="display:inline-block; border:1px solid rgba(255,255,255,0.1); background: var(--surface2); padding:0.5rem 1rem; border-radius:8px; font-size:0.9rem; margin-bottom:1.5rem; color: var(--gold-light);">
@@ -550,7 +550,7 @@ function checkTodayEvent() {
     const e = todayEvents[0];
     const content = document.getElementById('todayEventContent');
     content.innerHTML = `
-      ${e.photo ? `<img src="${sanitizeText(e.photo)}" style="width:100%; max-height:250px; object-fit:cover; border-radius:8px; margin-bottom:1.5rem;">` : ''}
+      ${e.photo ? `<img src="${sanitizeText(e.photo)}" style="width:100%; max-height:250px; object-fit:cover; border-radius:8px; margin-bottom:1.5rem;" onerror="this.onerror=null; this.style.display='none';">` : ''}
       <h2 style="font-family:'Cinzel', serif; color:var(--text); font-size:1.8rem; margin-bottom:0.5rem;">${sanitizeText(e.title)}</h2>
       <div style="display:inline-block; border:1px solid var(--border); background: var(--surface2); padding:0.5rem 1rem; border-radius:8px; font-size:0.9rem; margin-bottom:1.5rem; color: var(--gold);">
         <span>🕐 ${sanitizeText(e.event_time || 'All Day')}</span> | <span>📍 ${sanitizeText(e.venue || 'TBA')}</span>
@@ -1087,6 +1087,48 @@ function openCreateModal(type, prefillDate = '') {
   itemModal.classList.add('open');
 }
 
+/* --- CLIENT IMAGE COMPRESSION --- */
+function compressImageFile(file, maxWidth = 800, maxHeight = 800, quality = 0.82) {
+  if (!file || !file.type || !file.type.startsWith('image/')) return Promise.resolve(file);
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+        if (width > maxWidth || height > maxHeight) {
+          if (width / height > maxWidth / maxHeight) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          } else {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#111';
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob((blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            resolve(file);
+          }
+        }, 'image/jpeg', quality);
+      };
+      img.onerror = () => resolve(file);
+      img.src = e.target.result;
+    };
+    reader.onerror = () => resolve(file);
+    reader.readAsDataURL(file);
+  });
+}
+
 /* --- PHOTO ADJUSTER ENGINE --- */
 let currentAdjustedPhotoBlob = null;
 let currentAdjustedDataUrl = null;
@@ -1465,21 +1507,24 @@ async function openEditModal(type, id) {
   currentAdjustedPhotoBlob = null;
   currentAdjustedDataUrl = null;
   
+  // Always fetch fresh item data with cache-buster so newly updated or cleaned photos reflect immediately
   let item = null;
-  if (state[type] && Array.isArray(state[type])) {
-    item = state[type].find(x => String(x._id) === String(id));
-  }
-  
-  if (!item) {
-    try {
-      const res = await fetch(`${API}/${type}/${id}`, {
-        headers: getAuthHeaders(),
-        credentials: 'include'
-      });
-      if (res.ok) {
-        item = await res.json();
+  try {
+    const res = await fetch(`${API}/${type}/${id}?_t=${Date.now()}`, {
+      headers: getAuthHeaders(),
+      credentials: 'include'
+    });
+    if (res.ok) {
+      item = await res.json();
+      if (state[type] && Array.isArray(state[type])) {
+        const idx = state[type].findIndex(x => String(x._id) === String(id));
+        if (idx !== -1) state[type][idx] = item;
       }
-    } catch (_) {}
+    }
+  } catch (_) {}
+  
+  if (!item && state[type] && Array.isArray(state[type])) {
+    item = state[type].find(x => String(x._id) === String(id));
   }
   
   if (!item) {
@@ -1518,11 +1563,11 @@ async function openEditModal(type, id) {
         <div class="form-group">
           <label>Photo</label>
           ${item.photo ? `
-            <div style="background:var(--surface); padding:0.8rem; border-radius:var(--radius-sm); border:1px solid var(--border); margin-bottom:0.75rem;">
+            <div class="current-photo-box" style="background:var(--surface); padding:0.8rem; border-radius:var(--radius-sm); border:1px solid var(--border); margin-bottom:0.75rem;">
               <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.4rem; text-transform:uppercase;">Current Photo:</div>
               <div style="display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap;">
-                <div style="display:flex; align-items:center; gap:0.8rem;">
-                  <img src="${sanitizeText(item.photo)}" style="width:64px; height:64px; object-fit:cover; border-radius:8px; border:1px solid var(--border);" alt="Current Photo">
+                <div style="display:flex; align-items:center; gap:0.8rem; flex-wrap:wrap;">
+                  <img src="${sanitizeText(item.photo)}" style="width:64px; height:64px; object-fit:cover; border-radius:8px; border:1px solid var(--border);" alt="Current Photo" onerror="this.onerror=null; const b = this.closest('.current-photo-box'); if (b) b.style.display='none';">
                   <button type="button" class="btn-icon btn-edit" onclick="triggerPhotoAdjust('${sanitizeText(item.photo)}', 'members', 'memberPhotoPreview')">
                     ✂️ Adjust Photo
                   </button>
@@ -1561,11 +1606,11 @@ async function openEditModal(type, id) {
         <div class="form-group">
           <label>Photo</label>
           ${item.photo ? `
-            <div style="background:var(--surface); padding:0.8rem; border-radius:var(--radius-sm); border:1px solid var(--border); margin-bottom:0.75rem;">
+            <div class="current-photo-box" style="background:var(--surface); padding:0.8rem; border-radius:var(--radius-sm); border:1px solid var(--border); margin-bottom:0.75rem;">
               <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.4rem; text-transform:uppercase;">Current Photo:</div>
               <div style="display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap;">
-                <div style="display:flex; align-items:center; gap:0.8rem;">
-                  <img src="${sanitizeText(item.photo)}" style="width:64px; height:64px; object-fit:cover; border-radius:8px; border:1px solid var(--border);" alt="Current Photo">
+                <div style="display:flex; align-items:center; gap:0.8rem; flex-wrap:wrap;">
+                  <img src="${sanitizeText(item.photo)}" style="width:64px; height:64px; object-fit:cover; border-radius:8px; border:1px solid var(--border);" alt="Current Photo" onerror="this.onerror=null; const b = this.closest('.current-photo-box'); if (b) b.style.display='none';">
                   <button type="button" class="btn-icon btn-edit" onclick="triggerPhotoAdjust('${sanitizeText(item.photo)}', 'events', 'eventPhotoPreview')">
                     ✂️ Adjust Photo
                   </button>
@@ -1596,11 +1641,11 @@ async function openEditModal(type, id) {
         <div class="form-group">
           <label>Photo</label>
           ${item.photo ? `
-            <div style="background:var(--surface); padding:0.8rem; border-radius:var(--radius-sm); border:1px solid var(--border); margin-bottom:0.75rem;">
+            <div class="current-photo-box" style="background:var(--surface); padding:0.8rem; border-radius:var(--radius-sm); border:1px solid var(--border); margin-bottom:0.75rem;">
               <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.4rem; text-transform:uppercase;">Current Photo:</div>
               <div style="display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap;">
-                <div style="display:flex; align-items:center; gap:0.8rem;">
-                  <img src="${sanitizeText(item.photo)}" style="width:64px; height:64px; object-fit:cover; border-radius:8px; border:1px solid var(--border);" alt="Current Photo">
+                <div style="display:flex; align-items:center; gap:0.8rem; flex-wrap:wrap;">
+                  <img src="${sanitizeText(item.photo)}" style="width:64px; height:64px; object-fit:cover; border-radius:8px; border:1px solid var(--border);" alt="Current Photo" onerror="this.onerror=null; const b = this.closest('.current-photo-box'); if (b) b.style.display='none';">
                   <button type="button" class="btn-icon btn-edit" onclick="triggerPhotoAdjust('${sanitizeText(item.photo)}', 'achievements', 'achPhotoPreview')">
                     ✂️ Adjust Photo
                   </button>
@@ -1633,11 +1678,11 @@ async function openEditModal(type, id) {
         <div class="form-group">
           <label>Photo</label>
           ${item.photo ? `
-            <div style="background:var(--surface); padding:0.8rem; border-radius:var(--radius-sm); border:1px solid var(--border); margin-bottom:0.75rem;">
+            <div class="current-photo-box" style="background:var(--surface); padding:0.8rem; border-radius:var(--radius-sm); border:1px solid var(--border); margin-bottom:0.75rem;">
               <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.4rem; text-transform:uppercase;">Current Photo:</div>
               <div style="display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap;">
-                <div style="display:flex; align-items:center; gap:0.8rem;">
-                  <img src="${sanitizeText(item.photo)}" style="width:64px; height:64px; object-fit:cover; border-radius:8px; border:1px solid var(--border);" alt="Current Photo">
+                <div style="display:flex; align-items:center; gap:0.8rem; flex-wrap:wrap;">
+                  <img src="${sanitizeText(item.photo)}" style="width:64px; height:64px; object-fit:cover; border-radius:8px; border:1px solid var(--border);" alt="Current Photo" onerror="this.onerror=null; const b = this.closest('.current-photo-box'); if (b) b.style.display='none';">
                   <button type="button" class="btn-icon btn-edit" onclick="triggerPhotoAdjust('${sanitizeText(item.photo)}', 'founders', 'founderPhotoPreview')">
                     ✂️ Adjust Photo
                   </button>
@@ -1715,8 +1760,13 @@ async function handleEditSubmit(e, type, id) {
   btn.disabled = true;
   
   const formData = new FormData(form);
+  const fileInput = form.querySelector('input[type="file"][name="photo"]');
   if (currentAdjustedPhotoBlob) {
     formData.set('photo', currentAdjustedPhotoBlob, 'adjusted_photo.jpg');
+    formData.delete('remove_photo');
+  } else if (fileInput && fileInput.files && fileInput.files[0]) {
+    const compressedBlob = await compressImageFile(fileInput.files[0]);
+    formData.set('photo', compressedBlob, 'photo.jpg');
     formData.delete('remove_photo');
   }
   
@@ -1770,8 +1820,12 @@ async function handleFormSubmit(e, type) {
   btn.disabled = true;
   
   const formData = new FormData(form);
+  const fileInput = form.querySelector('input[type="file"][name="photo"]');
   if (currentAdjustedPhotoBlob) {
     formData.set('photo', currentAdjustedPhotoBlob, 'adjusted_photo.jpg');
+  } else if (fileInput && fileInput.files && fileInput.files[0]) {
+    const compressedBlob = await compressImageFile(fileInput.files[0]);
+    formData.set('photo', compressedBlob, 'photo.jpg');
   }
   
   try {

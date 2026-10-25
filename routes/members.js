@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const router = express.Router();
 const Member = require('../models/Member');
 const { requireAdmin } = require('../middleware/auth');
-const { createUploader, safeUnlinkUpload } = require('../middleware/fileHelper');
+const { createUploader, processUpload, safeUnlinkUpload } = require('../middleware/fileHelper');
 
 const upload = createUploader('member');
 
@@ -29,10 +29,14 @@ router.post('/', requireAdmin, upload.single('photo'), async (req, res) => {
   try {
     const { name, department, section, role, bio, roll_no, gen, year } = req.body;
     if (!name || !department || !section || !roll_no || !gen) {
-      if (req.file) safeUnlinkUpload('/uploads/' + req.file.filename);
       return res.status(400).json({ error: 'Name, department, section, roll_no, and generation are required' });
     }
-    const photo = req.file ? '/uploads/' + req.file.filename : null;
+    let photo = null;
+    if (req.file) {
+      photo = await processUpload(req.file, 'member');
+    } else if (req.body.photo_data && typeof req.body.photo_data === 'string' && req.body.photo_data.startsWith('data:image/')) {
+      photo = req.body.photo_data;
+    }
     const member = new Member({
       name: String(name).trim(),
       roll_no: String(roll_no).trim(),
@@ -47,7 +51,6 @@ router.post('/', requireAdmin, upload.single('photo'), async (req, res) => {
     await member.save();
     res.status(201).json(member);
   } catch (e) {
-    if (req.file) safeUnlinkUpload('/uploads/' + req.file.filename);
     res.status(500).json({ error: 'Failed to save member' });
   }
 });
@@ -55,17 +58,18 @@ router.post('/', requireAdmin, upload.single('photo'), async (req, res) => {
 router.put('/:id', requireAdmin, upload.single('photo'), async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      if (req.file) safeUnlinkUpload('/uploads/' + req.file.filename);
       return res.status(400).json({ error: 'Invalid member ID' });
     }
     const member = await Member.findById(req.params.id);
     if (!member) {
-      if (req.file) safeUnlinkUpload('/uploads/' + req.file.filename);
       return res.status(404).json({ error: 'Member not found' });
     }
     if (req.file) {
       if (member.photo) safeUnlinkUpload(member.photo);
-      member.photo = '/uploads/' + req.file.filename;
+      member.photo = await processUpload(req.file, 'member');
+    } else if (req.body.photo_data && typeof req.body.photo_data === 'string' && req.body.photo_data.startsWith('data:image/')) {
+      if (member.photo) safeUnlinkUpload(member.photo);
+      member.photo = req.body.photo_data;
     } else if (req.body.remove_photo === 'true' || req.body.remove_photo === true) {
       if (member.photo) safeUnlinkUpload(member.photo);
       member.photo = null;
@@ -82,7 +86,6 @@ router.put('/:id', requireAdmin, upload.single('photo'), async (req, res) => {
     await member.save();
     res.json(member);
   } catch (e) {
-    if (req.file) safeUnlinkUpload('/uploads/' + req.file.filename);
     res.status(500).json({ error: 'Failed to update member' });
   }
 });
