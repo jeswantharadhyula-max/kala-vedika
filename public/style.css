@@ -596,6 +596,107 @@ ul { list-style: none; }
 .card-quote { font-style: italic; font-size: 0.8rem; color: var(--text-muted); }
 
 /* =====================
+   MEMBERS SEARCH & CONTROLS
+===================== */
+.members-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  width: 100%;
+}
+.member-search-box {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  align-items: center;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 50px;
+  padding: 0.25rem 0.6rem 0.25rem 1.1rem;
+  transition: all var(--transition);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+.member-search-box:hover {
+  border-color: var(--border-hover);
+}
+.member-search-box:focus-within {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(212,168,67,0.2), 0 8px 30px rgba(0,0,0,0.25);
+  background: var(--surface2);
+}
+.search-icon {
+  font-size: 1rem;
+  margin-right: 0.6rem;
+  opacity: 0.85;
+  user-select: none;
+  pointer-events: none;
+}
+.member-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-size: 0.92rem;
+  padding: 0.6rem 0;
+  font-family: inherit;
+}
+.member-search-input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.75;
+}
+.search-clear-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.08);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  transition: all var(--transition);
+}
+.search-clear-btn:hover {
+  background: rgba(212,168,67,0.2);
+  color: var(--gold);
+}
+.members-search-meta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  min-height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.search-badge {
+  background: rgba(212,168,67,0.1);
+  border: 1px solid rgba(212,168,67,0.25);
+  color: var(--gold);
+  padding: 0.25rem 0.85rem;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  animation: fadeIn 0.2s ease;
+}
+.search-badge strong {
+  color: var(--text);
+}
+.search-count {
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* =====================
    FILTER BUTTONS
 ===================== */
 .members-filter, .achievements-filter, .events-filter {
@@ -603,7 +704,7 @@ ul { list-style: none; }
   flex-wrap: wrap;
   gap: 0.5rem;
   justify-content: center;
-  margin-bottom: 3rem;
+  margin-bottom: 2.25rem;
 }
 .filter-btn {
   font-size: 0.8rem;

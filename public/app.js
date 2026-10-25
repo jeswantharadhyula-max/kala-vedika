@@ -25,6 +25,7 @@ let state = {
 };
 
 let currentMemberFilter = 'all';
+let currentMemberSearchQuery = '';
 let currentAchievementFilter = 'all';
 
 // Elements
@@ -256,26 +257,110 @@ function renderFounders(data) {
   setupIntersectionObservers();
 }
 
+function handleMemberSearch(query) {
+  currentMemberSearchQuery = (query || '').trim().toLowerCase();
+  const clearBtn = document.getElementById('memberSearchClearBtn');
+  if (clearBtn) {
+    clearBtn.style.display = currentMemberSearchQuery ? 'flex' : 'none';
+  }
+  renderMembers();
+}
+
+function clearMemberSearch() {
+  const input = document.getElementById('memberSearchInput');
+  if (input) {
+    input.value = '';
+    input.focus();
+  }
+  currentMemberSearchQuery = '';
+  const clearBtn = document.getElementById('memberSearchClearBtn');
+  if (clearBtn) clearBtn.style.display = 'none';
+  renderMembers();
+}
+
 function filterMembers(roleFilter) {
   currentMemberFilter = roleFilter || 'all';
   
   document.querySelectorAll('#membersFilter .filter-btn').forEach(btn => {
     btn.classList.remove('active');
-    if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(`'${currentMemberFilter}'`)) btn.classList.add('active');
+    if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(`'${currentMemberFilter}'`)) {
+      btn.classList.add('active');
+    }
   });
 
-  let filtered = state.members;
+  renderMembers();
+}
+
+function renderMembers() {
+  let filtered = state.members || [];
+  
+  // 1. Role Filter
   if (currentMemberFilter !== 'all') {
     if (currentMemberFilter === 'Event Coordinator') {
-      filtered = state.members.filter(m => m.role && m.role.toLowerCase().includes('coordinator'));
+      filtered = filtered.filter(m => m.role && m.role.toLowerCase().includes('coordinator'));
     } else {
-      filtered = state.members.filter(m => m.role === currentMemberFilter);
+      filtered = filtered.filter(m => m.role === currentMemberFilter);
+    }
+  }
+
+  // 2. Search Query Filter
+  if (currentMemberSearchQuery) {
+    const q = currentMemberSearchQuery;
+    filtered = filtered.filter(m => {
+      const name = (m.name || '').toLowerCase();
+      const role = (m.role || '').toLowerCase();
+      const dept = (m.department || '').toLowerCase();
+      const sec = (m.section || '').toLowerCase();
+      const roll = (m.roll_no || '').toLowerCase();
+      const gen = (m.gen || '').toLowerCase();
+      const year = (m.year ? String(m.year) : '').toLowerCase();
+      const bio = (m.bio || '').toLowerCase();
+
+      return name.includes(q) ||
+             role.includes(q) ||
+             dept.includes(q) ||
+             sec.includes(q) ||
+             roll.includes(q) ||
+             gen.includes(q) ||
+             year.includes(q) ||
+             bio.includes(q);
+    });
+  }
+
+  // 3. Update Result Meta
+  const meta = document.getElementById('membersSearchMeta');
+  if (meta) {
+    const total = (state.members || []).length;
+    if (currentMemberSearchQuery) {
+      meta.innerHTML = `<span class="search-badge">Found <strong>${filtered.length}</strong> of ${total} members matching "${sanitizeText(currentMemberSearchQuery)}"</span>`;
+    } else if (currentMemberFilter !== 'all') {
+      meta.innerHTML = `<span class="search-badge">Showing <strong>${filtered.length}</strong> ${sanitizeText(currentMemberFilter)}s</span>`;
+    } else {
+      meta.innerHTML = `<span class="search-count">Total <strong>${total}</strong> Members</span>`;
     }
   }
 
   const container = document.getElementById('membersGrid');
+  if (!container) return;
+
   if (!filtered || filtered.length === 0) {
-    container.innerHTML = `<div class="empty-state"><p>No members found in this category.</p></div>`;
+    if (currentMemberSearchQuery) {
+      container.innerHTML = `
+        <div class="empty-state" style="grid-column: 1 / -1; padding: 3rem 1rem; text-align: center;">
+          <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🔍</div>
+          <h3 style="font-family:'Cinzel', serif; color:var(--gold); margin-bottom: 0.5rem; font-size:1.25rem;">No Members Found</h3>
+          <p style="color:var(--text-muted); font-size: 0.9rem; margin-bottom: 1.25rem;">
+            No members matched "<strong>${sanitizeText(currentMemberSearchQuery)}</strong>"
+            ${currentMemberFilter !== 'all' ? ` in category <em>${sanitizeText(currentMemberFilter)}</em>` : ''}.
+          </p>
+          <button type="button" class="btn-secondary" onclick="clearMemberSearch()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 1.2rem; border-radius: 50px;">
+            ✕ Clear Search
+          </button>
+        </div>
+      `;
+    } else {
+      container.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;"><p>No members found in this category.</p></div>`;
+    }
     return;
   }
 
@@ -1846,6 +1931,13 @@ window.rotateAdjustImage = rotateAdjustImage;
 window.quickAlignAdjust = quickAlignAdjust;
 window.resetAdjustImage = resetAdjustImage;
 window.applyPhotoAdjustment = applyPhotoAdjustment;
+window.handleMemberSearch = handleMemberSearch;
+window.clearMemberSearch = clearMemberSearch;
+window.renderMembers = renderMembers;
 
-
-
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && document.activeElement && document.activeElement.id === 'memberSearchInput') {
+    clearMemberSearch();
+    document.activeElement.blur();
+  }
+});

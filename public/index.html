@@ -168,6 +168,25 @@
         <h2 class="section-title">Members</h2>
         <p class="section-subtitle">The talented souls who keep Kala Vedika alive</p>
       </div>
+
+      <!-- MEMBER SEARCH & CONTROLS -->
+      <div class="members-controls">
+        <div class="member-search-box">
+          <span class="search-icon">🔍</span>
+          <input 
+            type="text" 
+            id="memberSearchInput" 
+            class="member-search-input" 
+            placeholder="Search members by name, role, department, roll no, bio..." 
+            autocomplete="off"
+            aria-label="Search members"
+            oninput="handleMemberSearch(this.value)"
+          >
+          <button type="button" id="memberSearchClearBtn" class="search-clear-btn" onclick="clearMemberSearch()" title="Clear search" style="display: none;">✕</button>
+        </div>
+        <div class="members-search-meta" id="membersSearchMeta"></div>
+      </div>
+
       <div class="members-filter" id="membersFilter">
         <button class="filter-btn active" onclick="filterMembers('all')">All</button>
         <button class="filter-btn" onclick="filterMembers('Secretary')">Secretary</button>
@@ -454,6 +473,6 @@
   <!-- TOAST -->
   <div class="toast" id="toast"></div>
 
-  <script src="app.js?v=2026.11"></script>
+  <script src="app.js?v=2026.12"></script>
 </body>
 </html>
