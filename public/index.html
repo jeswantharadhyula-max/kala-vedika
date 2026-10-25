@@ -385,6 +385,63 @@
     </div>
   </div>
 
+  <!-- PHOTO ADJUST MODAL -->
+  <div class="modal-overlay" id="photoAdjustModal" onclick="closePhotoAdjustModal(event)">
+    <div class="modal photo-adjust-modal">
+      <button class="modal-close" onclick="closePhotoAdjustModal()">✕</button>
+      <div class="modal-header" style="margin-bottom: 1rem;">
+        <div class="modal-icon" style="font-size: 2rem; margin-bottom: 0.25rem;">✂️</div>
+        <h2 style="font-size: 1.25rem;">Adjust &amp; Frame Photo</h2>
+        <p style="font-size: 0.8rem;">Drag image to reposition • Use slider or scroll to zoom</p>
+      </div>
+
+      <!-- Aspect Ratio Switcher -->
+      <div class="adjust-ratio-bar">
+        <span class="ratio-label">Frame:</span>
+        <button type="button" class="ratio-btn" id="ratioBtn-1" data-ratio="1" onclick="setAdjustAspectRatio(1, this)">1:1 Square</button>
+        <button type="button" class="ratio-btn" id="ratioBtn-1.27" data-ratio="1.27" onclick="setAdjustAspectRatio(1.27, this)">4:3 Card</button>
+        <button type="button" class="ratio-btn" id="ratioBtn-1.77" data-ratio="1.77" onclick="setAdjustAspectRatio(1.77, this)">16:9 Banner</button>
+      </div>
+
+      <!-- Canvas Viewport Container -->
+      <div class="adjust-canvas-container">
+        <canvas id="photoAdjustCanvas" width="360" height="360"></canvas>
+        <div class="adjust-canvas-hint">Drag to Pan • Scroll to Zoom</div>
+      </div>
+
+      <!-- Controls -->
+      <div class="adjust-controls">
+        <div class="adjust-zoom-row">
+          <label>Zoom</label>
+          <button type="button" class="adjust-zoom-btn" onclick="stepAdjustZoom(-0.15)">−</button>
+          <input type="range" id="photoZoomSlider" min="0.5" max="3" step="0.05" value="1" oninput="onAdjustZoomInput(this.value)">
+          <button type="button" class="adjust-zoom-btn" onclick="stepAdjustZoom(0.15)">+</button>
+        </div>
+
+        <div class="adjust-quick-actions">
+          <button type="button" class="adjust-tool-btn" onclick="quickAlignAdjust('top')" title="Align Top / Focus on face">
+            ⬆️ Face/Top
+          </button>
+          <button type="button" class="adjust-tool-btn" onclick="quickAlignAdjust('center')" title="Center image">
+            🎯 Center
+          </button>
+          <button type="button" class="adjust-tool-btn" onclick="rotateAdjustImage()" title="Rotate 90 degrees">
+            🔄 Rotate
+          </button>
+          <button type="button" class="adjust-tool-btn" onclick="resetAdjustImage()" title="Reset adjustment">
+            ↺ Reset
+          </button>
+        </div>
+      </div>
+
+      <!-- Footer Buttons -->
+      <div class="adjust-modal-footer">
+        <button type="button" class="btn-danger" style="flex:1;" onclick="closePhotoAdjustModal()">Cancel</button>
+        <button type="button" class="btn-success" style="flex:2;" onclick="applyPhotoAdjustment()">✓ Apply Adjustment</button>
+      </div>
+    </div>
+  </div>
+
   <!-- TODAY'S EVENT MODAL -->
   <div class="modal-overlay" id="todayEventModal" onclick="closeTodayEvent(event)">
     <div class="modal item-modal" style="text-align: center; max-width: 500px;">
@@ -397,6 +454,6 @@
   <!-- TOAST -->
   <div class="toast" id="toast"></div>
 
-  <script src="app.js?v=2026.8"></script>
+  <script src="app.js?v=2026.9"></script>
 </body>
 </html>

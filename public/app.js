@@ -931,7 +931,7 @@ function openCreateModal(type, prefillDate = '') {
         <div class="form-group"><label>Bio</label><textarea name="bio"></textarea></div>
         <div class="form-group">
           <label>Photo</label>
-          <input type="file" name="photo" accept="image/jpeg,image/png,image/webp,image/gif" onchange="previewSelectedPhoto(this, 'createMemberPhotoPreview')">
+          <input type="file" name="photo" accept="image/jpeg,image/png,image/webp,image/gif" onchange="previewSelectedPhoto(this, 'createMemberPhotoPreview', 'members')">
           <div id="createMemberPhotoPreview"></div>
         </div>
         <button type="submit" class="btn-primary btn-full">Save Member</button>
@@ -956,7 +956,7 @@ function openCreateModal(type, prefillDate = '') {
         <div class="form-group"><label>Description</label><textarea name="description" required></textarea></div>
         <div class="form-group">
           <label>Photo</label>
-          <input type="file" name="photo" accept="image/jpeg,image/png,image/webp,image/gif" onchange="previewSelectedPhoto(this, 'createEventPhotoPreview')">
+          <input type="file" name="photo" accept="image/jpeg,image/png,image/webp,image/gif" onchange="previewSelectedPhoto(this, 'createEventPhotoPreview', 'events')">
           <div id="createEventPhotoPreview"></div>
         </div>
         <button type="submit" class="btn-primary btn-full">Save Event</button>
@@ -972,7 +972,7 @@ function openCreateModal(type, prefillDate = '') {
         <div class="form-group"><label>Description</label><textarea name="description" required></textarea></div>
         <div class="form-group">
           <label>Photo</label>
-          <input type="file" name="photo" accept="image/jpeg,image/png,image/webp,image/gif" onchange="previewSelectedPhoto(this, 'createAchPhotoPreview')">
+          <input type="file" name="photo" accept="image/jpeg,image/png,image/webp,image/gif" onchange="previewSelectedPhoto(this, 'createAchPhotoPreview', 'achievements')">
           <div id="createAchPhotoPreview"></div>
         </div>
         <button type="submit" class="btn-primary btn-full">Save Achievement</button>
@@ -990,7 +990,7 @@ function openCreateModal(type, prefillDate = '') {
         <div class="form-group"><label>Bio</label><textarea name="bio"></textarea></div>
         <div class="form-group">
           <label>Photo</label>
-          <input type="file" name="photo" accept="image/jpeg,image/png,image/webp,image/gif" onchange="previewSelectedPhoto(this, 'createFounderPhotoPreview')">
+          <input type="file" name="photo" accept="image/jpeg,image/png,image/webp,image/gif" onchange="previewSelectedPhoto(this, 'createFounderPhotoPreview', 'founders')">
           <div id="createFounderPhotoPreview"></div>
         </div>
         <button type="submit" class="btn-primary btn-full">Save Founder</button>
@@ -1002,12 +1002,349 @@ function openCreateModal(type, prefillDate = '') {
   itemModal.classList.add('open');
 }
 
+/* --- PHOTO ADJUSTER ENGINE --- */
+let currentAdjustedPhotoBlob = null;
+let currentAdjustedDataUrl = null;
+
+let photoAdjustState = {
+  img: null,
+  scale: 1,
+  minScale: 0.2,
+  maxScale: 4,
+  offsetX: 0,
+  offsetY: 0,
+  rotation: 0,
+  isDragging: false,
+  dragStartX: 0,
+  dragStartY: 0,
+  aspectRatio: 1,
+  targetPreviewId: null,
+  type: 'members',
+  listenersAttached: false
+};
+
+function openPhotoAdjustModal() {
+  const modal = document.getElementById('photoAdjustModal');
+  if (modal) modal.classList.add('open');
+}
+
+function closePhotoAdjustModal(e) {
+  const modal = document.getElementById('photoAdjustModal');
+  if (e && e.target !== modal) return;
+  if (modal) modal.classList.remove('open');
+}
+
+function triggerPhotoAdjust(src, type = 'members', targetPreviewId = '') {
+  if (!src) {
+    showToast('Please select a photo first to adjust', 'error');
+    return;
+  }
+  
+  photoAdjustState.type = type;
+  photoAdjustState.targetPreviewId = targetPreviewId;
+  photoAdjustState.rotation = 0;
+  
+  // Set default aspect ratio based on type
+  let defaultRatio = 1;
+  if (type === 'founders') defaultRatio = 1.27;
+  else if (type === 'events' || type === 'achievements') defaultRatio = 1.77;
+  
+  // Update ratio buttons UI
+  document.querySelectorAll('.adjust-ratio-bar .ratio-btn').forEach(btn => {
+    const r = parseFloat(btn.getAttribute('data-ratio'));
+    btn.classList.toggle('active', Math.abs(r - defaultRatio) < 0.05);
+  });
+  
+  photoAdjustState.aspectRatio = defaultRatio;
+  
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    photoAdjustState.img = img;
+    updateCanvasDimensions();
+    fitImageToCanvas();
+    renderAdjustCanvas();
+    openPhotoAdjustModal();
+    setupAdjustCanvasListeners();
+  };
+  img.onerror = () => {
+    showToast('Failed to load image for adjustment', 'error');
+  };
+  img.src = src;
+}
+
+function setAdjustAspectRatio(ratio, btn) {
+  photoAdjustState.aspectRatio = ratio;
+  document.querySelectorAll('.adjust-ratio-bar .ratio-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  updateCanvasDimensions();
+  fitImageToCanvas();
+  renderAdjustCanvas();
+}
+
+function updateCanvasDimensions() {
+  const canvas = document.getElementById('photoAdjustCanvas');
+  if (!canvas) return;
+  const container = canvas.parentElement;
+  const containerWidth = Math.min(360, container ? container.clientWidth || 360 : 360);
+  const targetH = Math.round(containerWidth / photoAdjustState.aspectRatio);
+  
+  canvas.width = containerWidth;
+  canvas.height = targetH;
+}
+
+function fitImageToCanvas() {
+  const img = photoAdjustState.img;
+  const canvas = document.getElementById('photoAdjustCanvas');
+  if (!img || !canvas) return;
+  
+  const isRotated90 = photoAdjustState.rotation % 180 !== 0;
+  const imgW = isRotated90 ? img.height : img.width;
+  const imgH = isRotated90 ? img.width : img.height;
+  
+  const scaleW = canvas.width / imgW;
+  const scaleH = canvas.height / imgH;
+  const coverScale = Math.max(scaleW, scaleH);
+  
+  photoAdjustState.scale = coverScale;
+  photoAdjustState.minScale = coverScale * 0.4;
+  photoAdjustState.maxScale = coverScale * 4;
+  photoAdjustState.offsetX = 0;
+  photoAdjustState.offsetY = 0;
+  
+  const slider = document.getElementById('photoZoomSlider');
+  if (slider) {
+    slider.min = photoAdjustState.minScale;
+    slider.max = photoAdjustState.maxScale;
+    slider.step = (photoAdjustState.maxScale - photoAdjustState.minScale) / 100;
+    slider.value = photoAdjustState.scale;
+  }
+}
+
+function renderAdjustCanvas() {
+  const canvas = document.getElementById('photoAdjustCanvas');
+  if (!canvas || !photoAdjustState.img) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;
+  const h = canvas.height;
+  
+  ctx.clearRect(0, 0, w, h);
+  
+  // Dark backdrop
+  ctx.fillStyle = '#0b0b14';
+  ctx.fillRect(0, 0, w, h);
+  
+  ctx.save();
+  ctx.translate(w / 2 + photoAdjustState.offsetX, h / 2 + photoAdjustState.offsetY);
+  ctx.rotate((photoAdjustState.rotation * Math.PI) / 180);
+  ctx.scale(photoAdjustState.scale, photoAdjustState.scale);
+  
+  const img = photoAdjustState.img;
+  ctx.drawImage(img, -img.width / 2, -img.height / 2);
+  ctx.restore();
+  
+  // Rule of thirds subtle grid lines
+  ctx.strokeStyle = 'rgba(212, 168, 67, 0.3)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(w / 3, 0); ctx.lineTo(w / 3, h);
+  ctx.moveTo((2 * w) / 3, 0); ctx.lineTo((2 * w) / 3, h);
+  ctx.moveTo(0, h / 3); ctx.lineTo(w, h / 3);
+  ctx.moveTo(0, (2 * h) / 3); ctx.lineTo(w, (2 * h) / 3);
+  ctx.stroke();
+  
+  // Circular framing guide if 1:1 (avatar)
+  if (Math.abs(photoAdjustState.aspectRatio - 1) < 0.05) {
+    ctx.strokeStyle = 'rgba(212, 168, 67, 0.4)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(w / 2, h / 2, Math.min(w, h) / 2 - 4, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  
+  // Border highlight
+  ctx.strokeStyle = 'rgba(212, 168, 67, 0.85)';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(1, 1, w - 2, h - 2);
+}
+
+function onAdjustZoomInput(val) {
+  photoAdjustState.scale = parseFloat(val);
+  renderAdjustCanvas();
+}
+
+function stepAdjustZoom(delta) {
+  const newScale = Math.min(
+    Math.max(photoAdjustState.scale + delta, photoAdjustState.minScale),
+    photoAdjustState.maxScale
+  );
+  photoAdjustState.scale = newScale;
+  const slider = document.getElementById('photoZoomSlider');
+  if (slider) slider.value = newScale;
+  renderAdjustCanvas();
+}
+
+function rotateAdjustImage() {
+  photoAdjustState.rotation = (photoAdjustState.rotation + 90) % 360;
+  fitImageToCanvas();
+  renderAdjustCanvas();
+}
+
+function quickAlignAdjust(mode) {
+  const img = photoAdjustState.img;
+  const canvas = document.getElementById('photoAdjustCanvas');
+  if (!img || !canvas) return;
+  
+  const isRotated90 = photoAdjustState.rotation % 180 !== 0;
+  const imgH = (isRotated90 ? img.width : img.height) * photoAdjustState.scale;
+  
+  photoAdjustState.offsetX = 0;
+  if (mode === 'top') {
+    photoAdjustState.offsetY = Math.max(0, (imgH - canvas.height) / 2 - (canvas.height * 0.1));
+  } else if (mode === 'center') {
+    photoAdjustState.offsetY = 0;
+  }
+  renderAdjustCanvas();
+}
+
+function resetAdjustImage() {
+  photoAdjustState.rotation = 0;
+  fitImageToCanvas();
+  renderAdjustCanvas();
+}
+
+function setupAdjustCanvasListeners() {
+  if (photoAdjustState.listenersAttached) return;
+  const canvas = document.getElementById('photoAdjustCanvas');
+  if (!canvas) return;
+  
+  // Mouse drag
+  canvas.addEventListener('mousedown', (e) => {
+    photoAdjustState.isDragging = true;
+    photoAdjustState.dragStartX = e.clientX - photoAdjustState.offsetX;
+    photoAdjustState.dragStartY = e.clientY - photoAdjustState.offsetY;
+  });
+  
+  window.addEventListener('mousemove', (e) => {
+    if (!photoAdjustState.isDragging) return;
+    photoAdjustState.offsetX = e.clientX - photoAdjustState.dragStartX;
+    photoAdjustState.offsetY = e.clientY - photoAdjustState.dragStartY;
+    renderAdjustCanvas();
+  });
+  
+  window.addEventListener('mouseup', () => {
+    photoAdjustState.isDragging = false;
+  });
+  
+  // Touch drag
+  canvas.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 1) {
+      photoAdjustState.isDragging = true;
+      photoAdjustState.dragStartX = e.touches[0].clientX - photoAdjustState.offsetX;
+      photoAdjustState.dragStartY = e.touches[0].clientY - photoAdjustState.offsetY;
+    }
+  }, { passive: true });
+  
+  canvas.addEventListener('touchmove', (e) => {
+    if (!photoAdjustState.isDragging || e.touches.length !== 1) return;
+    photoAdjustState.offsetX = e.touches[0].clientX - photoAdjustState.dragStartX;
+    photoAdjustState.offsetY = e.touches[0].clientY - photoAdjustState.dragStartY;
+    renderAdjustCanvas();
+  }, { passive: true });
+  
+  canvas.addEventListener('touchend', () => {
+    photoAdjustState.isDragging = false;
+  });
+  
+  // Mouse wheel zoom
+  canvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const factor = e.deltaY < 0 ? 1.08 : 0.92;
+    const newScale = Math.min(
+      Math.max(photoAdjustState.scale * factor, photoAdjustState.minScale),
+      photoAdjustState.maxScale
+    );
+    photoAdjustState.scale = newScale;
+    const slider = document.getElementById('photoZoomSlider');
+    if (slider) slider.value = newScale;
+    renderAdjustCanvas();
+  }, { passive: false });
+  
+  photoAdjustState.listenersAttached = true;
+}
+
+function applyPhotoAdjustment() {
+  const img = photoAdjustState.img;
+  const displayCanvas = document.getElementById('photoAdjustCanvas');
+  if (!img || !displayCanvas) return;
+  
+  const exportCanvas = document.createElement('canvas');
+  const baseWidth = 800;
+  exportCanvas.width = baseWidth;
+  exportCanvas.height = Math.round(baseWidth / photoAdjustState.aspectRatio);
+  
+  const ctx = exportCanvas.getContext('2d');
+  ctx.fillStyle = '#111';
+  ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+  
+  const mult = exportCanvas.width / displayCanvas.width;
+  ctx.save();
+  ctx.translate(
+    exportCanvas.width / 2 + photoAdjustState.offsetX * mult,
+    exportCanvas.height / 2 + photoAdjustState.offsetY * mult
+  );
+  ctx.rotate((photoAdjustState.rotation * Math.PI) / 180);
+  ctx.scale(photoAdjustState.scale * mult, photoAdjustState.scale * mult);
+  ctx.drawImage(img, -img.width / 2, -img.height / 2);
+  ctx.restore();
+  
+  exportCanvas.toBlob((blob) => {
+    if (!blob) {
+      showToast('Failed to export adjusted image', 'error');
+      return;
+    }
+    
+    currentAdjustedPhotoBlob = blob;
+    currentAdjustedDataUrl = exportCanvas.toDataURL('image/jpeg', 0.92);
+    
+    // Update preview in the form
+    const targetId = photoAdjustState.targetPreviewId;
+    const container = targetId ? document.getElementById(targetId) : null;
+    if (container) {
+      container.innerHTML = `
+        <div style="margin-top: 0.6rem; display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; background: var(--surface2); padding: 0.6rem 0.9rem; border-radius: var(--radius-sm); border: 1px solid var(--gold);">
+          <div style="display:flex; align-items:center; gap:0.8rem;">
+            <img src="${currentAdjustedDataUrl}" style="width: 54px; height: 54px; object-fit: cover; border-radius: 6px; border: 1px solid var(--gold);" alt="Adjusted Preview">
+            <div>
+              <div style="font-size: 0.82rem; color: var(--gold); font-weight: 600;">✓ Photo adjusted &amp; framed!</div>
+              <div style="font-size: 0.72rem; color: var(--text-muted);">Ready to save with changes</div>
+            </div>
+          </div>
+          <button type="button" class="btn-icon btn-edit" onclick="triggerPhotoAdjust(currentAdjustedDataUrl, '${photoAdjustState.type}', '${targetId}')">
+            ✂️ Re-adjust
+          </button>
+        </div>
+      `;
+    }
+    
+    // Uncheck remove_photo if checked
+    const removePhotoCheckbox = document.querySelector('input[name="remove_photo"]');
+    if (removePhotoCheckbox) removePhotoCheckbox.checked = false;
+    
+    closePhotoAdjustModal();
+    showToast('Photo adjusted! Click Save Changes to save.', 'success');
+  }, 'image/jpeg', 0.92);
+}
+
 async function openEditModal(type, id) {
   if (!state.isAdmin) return;
   if (!id || id === 'undefined') {
     showToast('Invalid item ID', 'error');
     return;
   }
+  
+  currentAdjustedPhotoBlob = null;
+  currentAdjustedDataUrl = null;
   
   let item = null;
   if (state[type] && Array.isArray(state[type])) {
@@ -1064,8 +1401,13 @@ async function openEditModal(type, id) {
           ${item.photo ? `
             <div style="background:var(--surface); padding:0.8rem; border-radius:var(--radius-sm); border:1px solid var(--border); margin-bottom:0.75rem;">
               <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.4rem; text-transform:uppercase;">Current Photo:</div>
-              <div style="display:flex; align-items:center; gap:1rem;">
-                <img src="${sanitizeText(item.photo)}" style="width:64px; height:64px; object-fit:cover; border-radius:8px; border:1px solid var(--border);" alt="Current Photo">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap;">
+                <div style="display:flex; align-items:center; gap:0.8rem;">
+                  <img src="${sanitizeText(item.photo)}" style="width:64px; height:64px; object-fit:cover; border-radius:8px; border:1px solid var(--border);" alt="Current Photo">
+                  <button type="button" class="btn-icon btn-edit" onclick="triggerPhotoAdjust('${sanitizeText(item.photo)}', 'members', 'memberPhotoPreview')">
+                    ✂️ Adjust Photo
+                  </button>
+                </div>
                 <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem; color:#e57373; cursor:pointer;">
                   <input type="checkbox" name="remove_photo" value="true" onchange="handleRemovePhotoToggle(this, 'memberPhotoFile')"> Remove current photo
                 </label>
@@ -1075,7 +1417,7 @@ async function openEditModal(type, id) {
           ` : `
             <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.3rem; display:block;">Add Photo:</label>
           `}
-          <input type="file" id="memberPhotoFile" name="photo" accept="image/jpeg,image/png,image/webp,image/gif" onchange="previewSelectedPhoto(this, 'memberPhotoPreview')">
+          <input type="file" id="memberPhotoFile" name="photo" accept="image/jpeg,image/png,image/webp,image/gif" onchange="previewSelectedPhoto(this, 'memberPhotoPreview', 'members')">
           <div id="memberPhotoPreview"></div>
         </div>
         <button type="submit" class="btn-primary btn-full">Save Changes</button>
@@ -1102,8 +1444,13 @@ async function openEditModal(type, id) {
           ${item.photo ? `
             <div style="background:var(--surface); padding:0.8rem; border-radius:var(--radius-sm); border:1px solid var(--border); margin-bottom:0.75rem;">
               <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.4rem; text-transform:uppercase;">Current Photo:</div>
-              <div style="display:flex; align-items:center; gap:1rem;">
-                <img src="${sanitizeText(item.photo)}" style="width:64px; height:64px; object-fit:cover; border-radius:8px; border:1px solid var(--border);" alt="Current Photo">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap;">
+                <div style="display:flex; align-items:center; gap:0.8rem;">
+                  <img src="${sanitizeText(item.photo)}" style="width:64px; height:64px; object-fit:cover; border-radius:8px; border:1px solid var(--border);" alt="Current Photo">
+                  <button type="button" class="btn-icon btn-edit" onclick="triggerPhotoAdjust('${sanitizeText(item.photo)}', 'events', 'eventPhotoPreview')">
+                    ✂️ Adjust Photo
+                  </button>
+                </div>
                 <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem; color:#e57373; cursor:pointer;">
                   <input type="checkbox" name="remove_photo" value="true" onchange="handleRemovePhotoToggle(this, 'eventPhotoFile')"> Remove current photo
                 </label>
@@ -1113,7 +1460,7 @@ async function openEditModal(type, id) {
           ` : `
             <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.3rem; display:block;">Add Photo:</label>
           `}
-          <input type="file" id="eventPhotoFile" name="photo" accept="image/jpeg,image/png,image/webp,image/gif" onchange="previewSelectedPhoto(this, 'eventPhotoPreview')">
+          <input type="file" id="eventPhotoFile" name="photo" accept="image/jpeg,image/png,image/webp,image/gif" onchange="previewSelectedPhoto(this, 'eventPhotoPreview', 'events')">
           <div id="eventPhotoPreview"></div>
         </div>
         <button type="submit" class="btn-primary btn-full">Save Changes</button>
@@ -1132,8 +1479,13 @@ async function openEditModal(type, id) {
           ${item.photo ? `
             <div style="background:var(--surface); padding:0.8rem; border-radius:var(--radius-sm); border:1px solid var(--border); margin-bottom:0.75rem;">
               <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.4rem; text-transform:uppercase;">Current Photo:</div>
-              <div style="display:flex; align-items:center; gap:1rem;">
-                <img src="${sanitizeText(item.photo)}" style="width:64px; height:64px; object-fit:cover; border-radius:8px; border:1px solid var(--border);" alt="Current Photo">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap;">
+                <div style="display:flex; align-items:center; gap:0.8rem;">
+                  <img src="${sanitizeText(item.photo)}" style="width:64px; height:64px; object-fit:cover; border-radius:8px; border:1px solid var(--border);" alt="Current Photo">
+                  <button type="button" class="btn-icon btn-edit" onclick="triggerPhotoAdjust('${sanitizeText(item.photo)}', 'achievements', 'achPhotoPreview')">
+                    ✂️ Adjust Photo
+                  </button>
+                </div>
                 <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem; color:#e57373; cursor:pointer;">
                   <input type="checkbox" name="remove_photo" value="true" onchange="handleRemovePhotoToggle(this, 'achPhotoFile')"> Remove current photo
                 </label>
@@ -1143,7 +1495,7 @@ async function openEditModal(type, id) {
           ` : `
             <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.3rem; display:block;">Add Photo:</label>
           `}
-          <input type="file" id="achPhotoFile" name="photo" accept="image/jpeg,image/png,image/webp,image/gif" onchange="previewSelectedPhoto(this, 'achPhotoPreview')">
+          <input type="file" id="achPhotoFile" name="photo" accept="image/jpeg,image/png,image/webp,image/gif" onchange="previewSelectedPhoto(this, 'achPhotoPreview', 'achievements')">
           <div id="achPhotoPreview"></div>
         </div>
         <button type="submit" class="btn-primary btn-full">Save Changes</button>
@@ -1164,8 +1516,13 @@ async function openEditModal(type, id) {
           ${item.photo ? `
             <div style="background:var(--surface); padding:0.8rem; border-radius:var(--radius-sm); border:1px solid var(--border); margin-bottom:0.75rem;">
               <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.4rem; text-transform:uppercase;">Current Photo:</div>
-              <div style="display:flex; align-items:center; gap:1rem;">
-                <img src="${sanitizeText(item.photo)}" style="width:64px; height:64px; object-fit:cover; border-radius:8px; border:1px solid var(--border);" alt="Current Photo">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap;">
+                <div style="display:flex; align-items:center; gap:0.8rem;">
+                  <img src="${sanitizeText(item.photo)}" style="width:64px; height:64px; object-fit:cover; border-radius:8px; border:1px solid var(--border);" alt="Current Photo">
+                  <button type="button" class="btn-icon btn-edit" onclick="triggerPhotoAdjust('${sanitizeText(item.photo)}', 'founders', 'founderPhotoPreview')">
+                    ✂️ Adjust Photo
+                  </button>
+                </div>
                 <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem; color:#e57373; cursor:pointer;">
                   <input type="checkbox" name="remove_photo" value="true" onchange="handleRemovePhotoToggle(this, 'founderPhotoFile')"> Remove current photo
                 </label>
@@ -1175,7 +1532,7 @@ async function openEditModal(type, id) {
           ` : `
             <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.3rem; display:block;">Add Photo:</label>
           `}
-          <input type="file" id="founderPhotoFile" name="photo" accept="image/jpeg,image/png,image/webp,image/gif" onchange="previewSelectedPhoto(this, 'founderPhotoPreview')">
+          <input type="file" id="founderPhotoFile" name="photo" accept="image/jpeg,image/png,image/webp,image/gif" onchange="previewSelectedPhoto(this, 'founderPhotoPreview', 'founders')">
           <div id="founderPhotoPreview"></div>
         </div>
         <button type="submit" class="btn-primary btn-full">Save Changes</button>
@@ -1187,16 +1544,26 @@ async function openEditModal(type, id) {
   itemModal.classList.add('open');
 }
 
-function previewSelectedPhoto(input, previewContainerId) {
+function previewSelectedPhoto(input, previewContainerId, type = 'members') {
   const container = document.getElementById(previewContainerId);
   if (!container) return;
+  currentAdjustedPhotoBlob = null;
+  currentAdjustedDataUrl = null;
   if (input.files && input.files[0]) {
     const reader = new FileReader();
     reader.onload = function(e) {
       container.innerHTML = `
-        <div style="margin-top: 0.6rem; display: flex; align-items: center; gap: 0.8rem; background: var(--surface2); padding: 0.5rem 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--gold);">
-          <img src="${e.target.result}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px;" alt="Selected Photo Preview">
-          <span style="font-size: 0.8rem; color: var(--gold); font-weight: 500;">✓ New photo selected</span>
+        <div style="margin-top: 0.6rem; display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; background: var(--surface2); padding: 0.6rem 0.9rem; border-radius: var(--radius-sm); border: 1px solid var(--border-hover);">
+          <div style="display:flex; align-items:center; gap:0.8rem;">
+            <img src="${e.target.result}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px;" alt="Selected Photo Preview">
+            <div>
+              <div style="font-size: 0.8rem; color: var(--gold); font-weight: 600;">✓ New photo selected</div>
+              <div style="font-size: 0.7rem; color: var(--text-muted);">Adjust zoom, angle &amp; crop</div>
+            </div>
+          </div>
+          <button type="button" class="btn-icon btn-edit" onclick="triggerPhotoAdjust('${e.target.result}', '${type}', '${previewContainerId}')">
+            ✂️ Adjust Photo
+          </button>
         </div>
       `;
     };
@@ -1214,6 +1581,10 @@ function handleRemovePhotoToggle(checkbox, fileInputId) {
   }
   const preview = checkbox.form ? checkbox.form.querySelector('[id$="Preview"]') : null;
   if (preview && checkbox.checked) preview.innerHTML = '';
+  if (checkbox.checked) {
+    currentAdjustedPhotoBlob = null;
+    currentAdjustedDataUrl = null;
+  }
 }
 
 async function handleEditSubmit(e, type, id) {
@@ -1225,6 +1596,10 @@ async function handleEditSubmit(e, type, id) {
   btn.disabled = true;
   
   const formData = new FormData(form);
+  if (currentAdjustedPhotoBlob) {
+    formData.set('photo', currentAdjustedPhotoBlob, 'adjusted_photo.jpg');
+    formData.delete('remove_photo');
+  }
   
   try {
     const res = await fetch(`${API}/${type}/${id}`, {
@@ -1236,6 +1611,8 @@ async function handleEditSubmit(e, type, id) {
     
     if (res.ok) {
       showToast('Successfully updated', 'success');
+      currentAdjustedPhotoBlob = null;
+      currentAdjustedDataUrl = null;
       closeItemModal();
       
       // Refresh data
@@ -1274,6 +1651,9 @@ async function handleFormSubmit(e, type) {
   btn.disabled = true;
   
   const formData = new FormData(form);
+  if (currentAdjustedPhotoBlob) {
+    formData.set('photo', currentAdjustedPhotoBlob, 'adjusted_photo.jpg');
+  }
   
   try {
     const res = await fetch(`${API}/${type}`, {
@@ -1285,6 +1665,8 @@ async function handleFormSubmit(e, type) {
     
     if (res.ok) {
       showToast('Successfully added', 'success');
+      currentAdjustedPhotoBlob = null;
+      currentAdjustedDataUrl = null;
       closeItemModal();
       
       // Refresh data
@@ -1317,6 +1699,8 @@ async function handleFormSubmit(e, type) {
 
 function closeItemModal(e) {
   if (e && e.target !== itemModal) return;
+  currentAdjustedPhotoBlob = null;
+  currentAdjustedDataUrl = null;
   itemModal.classList.remove('open');
 }
 
@@ -1418,5 +1802,16 @@ window.openEditModal = openEditModal;
 window.handleEditSubmit = handleEditSubmit;
 window.previewSelectedPhoto = previewSelectedPhoto;
 window.handleRemovePhotoToggle = handleRemovePhotoToggle;
+window.openPhotoAdjustModal = openPhotoAdjustModal;
+window.closePhotoAdjustModal = closePhotoAdjustModal;
+window.triggerPhotoAdjust = triggerPhotoAdjust;
+window.setAdjustAspectRatio = setAdjustAspectRatio;
+window.onAdjustZoomInput = onAdjustZoomInput;
+window.stepAdjustZoom = stepAdjustZoom;
+window.rotateAdjustImage = rotateAdjustImage;
+window.quickAlignAdjust = quickAlignAdjust;
+window.resetAdjustImage = resetAdjustImage;
+window.applyPhotoAdjustment = applyPhotoAdjustment;
+
 
 
